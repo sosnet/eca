@@ -11,7 +11,6 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import jpl.Atom;
-import jpl.Compound;
 import jpl.Query;
 import jpl.Term;
 import businesslogic.conf.ComputationConstants;
@@ -264,9 +263,13 @@ public class LambdaMatrix extends TreeSet<Line> {
     System.out.println(coll);
 
     Set<String> orientations = new HashSet<>();
+    Set<String> mathematica = new HashSet<>();
+    for(int p = 0; p< matrix.length; p++) {
+    mathematica.add("P" + p + "x <= max"); mathematica.add("P" + p + "y <= max");
+    mathematica.add("P" + p + "x >= min"); mathematica.add("P" + p + "y >= min");
+    }
     Set<Set<Integer>> triples = new HashSet<>();
     for (Set<Integer> s : coll) {
-      // if (s.size() > 3) {
       for (int p1 : s) {
         for (int p2 : s) {
           for (int p3 : s) {
@@ -275,23 +278,27 @@ public class LambdaMatrix extends TreeSet<Line> {
               triple.add(p1);
               triple.add(p2);
               triple.add(p3);
-              if (triples.add(triple))
-                orientations.add("isColl(P" + p1 + ",P" + p2 + ",P" + p3 + ")");
+              if (triples.add(triple)) {
+//                orientations.add("isColl(P" + p1 + ",P" + p2 + ",P" + p3 + ")");
+                mathematica.add("orientation[P" + p1 + ", " +
+                							"P" + p2 + ", " +
+                							"P" + p3 + "] == 0");
+              }
             }
           }
         }
       }
-      // } else{
-      //
-      // triples.add(s);
-      // }
     }
     System.out.println(triples);
 
     for (int outer = 0; outer < matrix.length; ++outer) {
       for (int inner = outer; inner < matrix.length; ++inner) {
-        for (int i = 0; i < matrix.length; ++i) {
-          if (inner == outer || inner == i || outer == i)
+    	  if(inner == outer)
+    		  continue;
+    	  mathematica.add("unique[P" + outer + ", P" + inner + "]");
+        
+    	  for (int i = 0; i < matrix.length; ++i) {
+          if (inner == i || outer == i)
             continue;
 
           Set<Integer> s = new HashSet<>();
@@ -303,69 +310,74 @@ public class LambdaMatrix extends TreeSet<Line> {
 
           int orientation = matrix[i][inner] - matrix[outer][inner];
           // int orientation2 = matrix[inner][outer] - matrix[inner][i];
-          int priority = 0;
-          String p1;
-          // if (inner == 0) {
-          // ++priority;
-          // p1 = "p(5,1)";
-          // } else if (inner == 1) {
-          // p1 = "p(10,1)";
-          // ++priority;
-          // } else
+          
+          String p1, p2, p3;
           p1 = ("P" + outer);
-          String p2;
-          // if (outer == 0) {
-          // p2 = "p(5,1)";
-          // ++priority;
-          // } else if (outer == 1) {
-          // p2 = "p(10,1)";
-          // ++priority;
-          // } else
           p2 = ("P" + inner);
-          int pos = priority == 2 ? 0 : priority == 1 ? orientations.size() / 2
-              : orientations.size();
-          // if (orientation != orientation2)
-          // ;// orientations.add(pos, "isColl(" + p1 + "," + p2 + ",P" + i +
-          // // ")");
-          // else
+          p3 = ("P" + i);
+          
           if (orientation < 0) {
-            orientations.add("isLeft(" + p1 + "," + p2 + ",P" + i + ")");
+//            orientations.add("isLeft(" + p1 + "," + p2 + "," + p3 + ")");
+            mathematica.add("orientation[" + p1 + ", " +
+					p2 + ", " +
+					p3 + " ] < 0");
           } else if (orientation > 0) {
-            orientations.add("isLeft(" + p2 + "," + p1 + ",P" + i + ")");
+//            orientations.add("isLeft(" + p2 + "," + p1 + "," + p3 + ")");
+            mathematica.add("orientation[" + p1 + ", " + 
+					p2 + ", " +
+					p3 + "] > 0");
+//            mathematica.add("orientation[" + p2 + "x, " + p2 + "y, " +
+//					p1 + "x, " + p1 + "y, " +
+//					p3 + "x, " + p3 + "y] < 0");
           }
-          // else
-          // orientations.add(pos, "isColl(" + p1 + "," + p2 + ",P" + i + ")");
         }
       }
     }
-    StringBuilder qBuf = new StringBuilder();
-    int i = 0;
-    for (String o : orientations) {
-      qBuf.append(o).append(i == orientations.size() - 1 ? "." : ",");
-      ++i;
+
+    StringBuilder mBuf = new StringBuilder();
+    StringBuilder mVars = new StringBuilder();
+    StringBuilder mSolution = new StringBuilder();
+    
+    mBuf.append("\n\n\norientation[{Ax_, Ay_}, {Bx_, By_}, {Cx_, Cy_}] := Ax*By + Bx*Cy + Cx*Ay - Cx*By - Bx*Ay - Ax*Cy;\n");
+    mBuf.append("unique[{P1x_, P1y_}, {P2x_, P2y_}] := (P1x != P2x || P1y != P2y);\n\n");
+    
+    mBuf.append("min = 0;\n max = 20;\n");
+    
+    for (int p = 0; p < matrix.length; p++)
+    	mBuf.append("P" + p + " = {P" + p + "x, P" + p + "y};\n");
+    
+    mBuf.append("\nResolve[{");
+    boolean first = true;
+    for (String o : mathematica) {
+    	if(first)
+    		first = false;
+    	else
+    		mBuf.append(", \n");
+    	
+        mBuf.append(o);
     }
-    Query lambda = new Query(qBuf.toString());
-    System.out.println("Querying: \n" + qBuf.toString());
-    // lambda.query();
-
-    lambda.goal();
-    Hashtable solution = lambda.oneSolution();
-
-    if (solution != null) {
-      System.out.println("REALIZATION:");
-      Set<GridPoint> gridpoints = new HashSet<>();
-      for (Object o : solution.keySet()) {
-        String pointstring = solution.get(o).toString();
-        StringTokenizer st = new StringTokenizer(pointstring, "p(, )");
-        GridPoint p = new GridPoint(Integer.parseInt(st.nextToken()),
-            Integer.parseInt(st.nextToken().trim()));
-        p.setName(Integer.parseInt(o.toString().split("P")[1]));
-        System.out.println(o + ": " + p.getX() + ", " + p.getY());
-        gridpoints.add(p);
-      }
-      return gridpoints;
-    } else
-      throw new Exception("no solution found: " + qBuf.toString());
-
+    first = true;
+    mBuf.append("}, ");
+    
+    mVars.append("{");
+    String tmp = "%";
+    for (int p = 0; p < matrix.length; p++) {
+    	
+    	if(first)
+    		first = false;
+    	else
+    		mVars.append(", \n");
+    
+    	mVars.append("P" + p + "x, P" + p + "y");
+    	mSolution.append("{P" + p + "x, P" + p + "y} /. ").append(tmp).append("\n");
+    	tmp += "%";
+    }
+    mVars.append("}");
+    mBuf.append(mVars.toString()).append(", Integers];\n\n");
+    mBuf.append("FindInstance[%, ").append(mVars.toString()).append(", Integers];\n\n");
+    mBuf.append(mSolution.toString()).append("\n\n\n");
+    System.out.println(mBuf.toString());
+	return null;
+    
   }
 }
