@@ -1,0 +1,54 @@
+% pprove(G) is a meta-interpreter for proving goal G.  The version commented out is an advanced
+% version that uses exceptions to simulate cut (!).  JLog needs to support exceptions first, but
+% it is here for later testing purposes.  The Queens problem is also included as an example
+% problem.
+% For example: pprove(queens(8,X)) uses the meta-interpreter to prove queens(8,X). 
+
+pprove((A,B)) :- !, pprove(A) , pprove(B).
+pprove(X) :- predicate_property(X,built_in), !, call(X).
+pprove(H) :- clause(H,B), pprove(B).
+
+predicate_property(queens(_,_),_) :- !, fail.
+predicate_property(queens(_,_,_),_) :- !, fail.
+predicate_property(attack(_,_),_) :- !, fail.
+predicate_property(attack(_,_,_),_) :- !, fail.
+predicate_property(range(_,_,_),_) :- !, fail.
+predicate_property(selectq(_,_,_),_) :- !, fail.
+predicate_property(X,built_in) :- !.
+
+% pprove((A;B)) :- !, pprove(A) ; pprove(B).
+% pprove((A,B)) :- !, pprove(A) , pprove(B).
+% pprove(!) :- !, pprove_cut.
+% pprove(X) :- predicate_property(X,built_in), !, call(X).
+% pprove(H) :- catch((clause(H,B), pprove(B)), pprove_cut_exception, fail).
+
+% pprove_cut. 
+% pprove_cut :- throw(pprove_cut_exception). 
+
+:- dynamic(queens/2).
+:- dynamic(queens/3).
+:- dynamic(attack/2).
+:- dynamic(attack/3).
+:- dynamic(range/3).
+:- dynamic(selectq/3).
+
+queens(N,Qs) :-
+	range(1,N,Ns), queens(Ns,[],Qs).
+
+queens(UnplacedQs, SafeQs, Qs) :-
+	selectq(Q, UnplacedQs, UnplacedQs1),
+	\+ attack(Q,SafeQs),
+	queens(UnplacedQs1,[Q|SafeQs],Qs).
+queens([],Qs,Qs).
+
+attack(X,Xs) :- attack(X, 1, Xs).
+
+attack(X,N,[Y|_]) :- X is Y+N ; X is Y-N.
+attack(X,N,[_|Ys]) :- N1 is N+1, attack(X,N1,Ys).
+
+range(M,N,[M|Ns]) :- M < N, M1 is M+1, range(M1,N,Ns).
+range(N,N,[N]).
+
+selectq(X,[X|Xs],Xs).  
+selectq(X,[Y|Ys],[Y|Zs]) :- selectq(X,Ys,Zs). 
+

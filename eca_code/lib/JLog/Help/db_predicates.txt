@@ -1,0 +1,20 @@
+The following database predicates are optionally supported by JLog.  These predicates are in the database library (databaseLib.jar), and are loaded as follows:
+
+:- load_library('database').
+These database predicates are best suited for small-scale use, not for heavy-duty tasks.
+db_connect(JdbcDriver, JdbcUrl, Username, Password).
+Opens a connection to the specified database. The parameters are the same ones generally used to access relational databases via JDBC.  No token for identifying the DB is returned - only a single DB can be accessed at any given time. Opening a new connection causes any existing connection to be closed.db_select(Query, Variable).
+
+Executes the SQL statement given in Query against the database. This should be used for select operations. Variable will be a list of lists, with each row of the query result becoming a list consisting of the attributes selected.db_execute(Query).
+
+Executes the SQL statement given in Query against the database. This should be used for insert/update/delete operations or stored procedure calls.db_disconnect.
+
+Closes the connection to the database.Working with the results of a db_select:There are various ways of accessing the results of a db_select.  Consider the following example, where a table with three attributes and three records is created:db_execute('create table test (id integer, name varchar(20), age integer, primary key (id))').db_execute('insert into test values(?,?,?)', [1, 'arthur dent', 42]).db_execute('insert into test values(?,?,?)', [2, 'ford prefect', 4242]).db_execute('insert into test values(?,?,?)', [3, 'zaphod beeblebrox', 424242]).One way is retrieve individual records into variables. This works if the number of records is known, or only the first few records are of interest.  
+
+db_select('select * from test order by id', [X|[Y|[Z]]]) :X = [1,arthur dent,42]Y = [2,ford prefect,4242]Z = [3,zaphod beeblebrox,424242]This could be taken even further by alternatively retrieving individual attributes.  This becomes unwieldy very quickly.
+
+db_select('select * from test order by id', [[X1|[X2|[X3]]]|[Y|[Z]]]) :X1 = 1X2 = arthur dentX3 = 42Y = [2,ford prefect,4242]Z = [3,zaphod beeblebrox,424242]Or all records could be retrieved into one variable, which would then be dissected further in a separate step.
+
+db_select('select * from test order by id', X) :X = [[1,arthur dent,42],[2,ford prefect,4242],[3,zaphod beeblebrox,424242]]The following Prolog predicate demonstrates how one could proceed.
+
+record(1, S, R) :- S = [R|_].record(N, S, R) :- N1 is N-1, S = [S1|Rest], record(N1, Rest, R).db_test2_select(X), record(1,X,R) :R = [1,arthur dent,42]db_test2_select(X), record(2,X,R) :R = [2,ford prefect,4242]db_test2_select(X), record(3,X,R) :R = [3,zaphod beeblebrox,424242]

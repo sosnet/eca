@@ -1,0 +1,13 @@
+Sometimes it is useful to specify the Prolog source code and query via the 'param' tags inside the 'applet' tag used by HTML documents to load JLog.  For example, some Java environments do not support copy and paste and these tags provide a way to enter text into the Source text area, while it other cases you wish to use JLog to demonstrate a particular program or concept.The name attributes of the 'param' tag for the source code are "source", and for the query are "query".  The value attribute contains the actual Prolog source or query.  An example is provided below:<title>JLog: Prolog in Java</title><hr><applet archive="JLog.jar" code="JLog.class" width=640 height=480><param name="source" value=" a :- b,c. b :- c. c."><param name="query" value="a."></applet><hr>There are some caveats.  The contents of the value attributes must conform to HTML, so you should replace occurences of < and > with &lt; and &gt; respectively.  Some browsers fail to read the value properly and display it without line breaks.  This causes programs with line comments to fail.
+
+Another better way is to keep a separate source file, and specify it via an URL in the "file" 'param' tag.
+
+The possible 'param' tags are:
+
+NAME  		VALUE
+====== 		=====
+source 		prolog source code
+file   		prolog source code URL
+query  		prolog query
+action 		'consult' =  consult, 'query' = consult + query
+pane  		'consult', 'query', 'debug', 'animation', 'help'

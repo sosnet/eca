@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Class-Path: jlogic.jar builtinsLib.jar animationLib.jar
+Main-Class: ubc.cs.JLog.Applet.gJLogApplication

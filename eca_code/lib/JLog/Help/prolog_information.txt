@@ -1,0 +1,31 @@
+These are some URLs that may help answer your Prolog questions.  
+
+Guides
+<http://www.faqs.org/faqs/prolog/faq/><http://www.faqs.org/faqs/prolog/resource-guide/part1/>
+<http://www.faqs.org/faqs/prolog/resource-guide/part2/>
+<http://vl.fmnet.info/logic-prog/#Prolog>
+
+Manuals
+
+<http://gollem.science.uva.nl/SWI-Prolog/Manual/>
+<http://gollem.science.uva.nl/SWI-Prolog/Manual/Contents.html>
+<http://gollem.science.uva.nl/SWI-Prolog/Manual/DocIndex.html>
+<http://gollem.science.uva.nl/SWI-Prolog/Manual/summary.html>
+
+<http://www.ncc.up.pt/~vsc/Yap/yap.html>
+<http://www.ncc.up.pt/~vsc/Yap/yap.html#SEC_Contents>
+<http://www.ncc.up.pt/~vsc/Yap/yap.html#SEC171>
+
+Tutorials
+
+<http://www.csupomona.edu/~jrfisher/www/prolog_tutorial/contents.html>
+<http://cs.wwc.edu/~cs_dept/KU/PR/Prolog.html>
+<http://www.cs.may.ie/~jpower/Courses/PROLOG/>
+<http://www.compapp.dcu.ie/~alex/LOGIC/start.html>
+<http://kti.ms.mff.cuni.cz/~bartak/prolog/>
+<http://www.cs.sfu.ca/CC/SW/Prolog/Notes/toc.html>
+<http://www.coli.uni-saarland.de/~kris/learn-prolog-now/html/index.html>
+<http://www.amzi.com/AdventureInProlog/>
+Some references are manuals for other Prolog implementations and JLog may differ from these implementations.  Check out the JLog Compatability section.
+
+Choose 'Listing of Available Predicates' from the Help panel to get a complete listing of available predicates and operators in JLog. 

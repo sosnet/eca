@@ -1,0 +1,11 @@
+expr(Z) --> term(X), "+", expr(Y), {Z = X + Y}.
+expr(Z) --> term(X), "-", expr(Y), {Z = X - Y}.
+expr(X) --> term(X).
+
+term(Z) --> number(X), "*", expr(Y), {Z = X * Y}.
+term(Z) --> number(X), "/", expr(Y), {Z = X / Y}.
+term(Z) --> number(Z).
+
+number(C) --> "+", number(C).
+number(C) --> "-", number(X), {C = -X}.
+number(X) --> [C], {"0" =< C, C =< "9", X = C - "0"}.

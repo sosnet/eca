@@ -1,0 +1,162 @@
+<?xml version="1.0" ?>
+
+<!--
+   Ant buildfile for BSF in JLog
+   
+   Original version by Ulf Dittmer
+   
+   NOTE: This build file is to demonstrate the use of BSF in an Ant build file.
+   It is not fully tested since it was created (
+  -->
+
+<project name="JLog" default="info" basedir=".">
+
+	<description>
+		NOTE: These build examples were not tested in current configuration...
+
+		Demonstrates Ant built-in &lt;script&gt; task, which uses BSF
+	</description>
+
+  <!-- =================================================================== -->
+  <!-- properties														   -->
+  <!-- =================================================================== -->
+
+	<property environment="env" />
+
+	<property name="installDir"		value="../../JLog" />
+
+
+<!-- =================================================================== -->
+<!-- Define the basic classpath                                          -->
+<!-- =================================================================== -->
+  
+  <path id="basic.class.path">
+
+	<fileset dir="${classDir}">
+		<include name="**/*.class"/>
+	</fileset>
+
+    <pathelement location="${libDir}/${bsfLib}" />
+
+  </path>
+  
+
+<!-- =================================================================== -->
+<!-- Information 														 -->
+<!-- =================================================================== -->
+  
+	<target name="info" description="project related help">
+
+		<echo>
+	
+	NOTE: These build examples were not tested in current configuration...
+	
+	Documentation is in the Examples/BSF/README.txt file.
+	
+	For a list of project targets: ant -projecthelp
+
+	The complete JLog must already have been installed into the JLog subdirectory.
+	The bsfLib.jar library must be built and the bsf.jar library be in the JLog
+	install subdirectory. 
+		 		  
+		</echo>
+		
+	</target>
+
+
+<!-- =================================================================== -->
+<!-- this demonstrates Ants built-in <script> task, which uses BSF       -->
+<!-- =================================================================== -->
+
+	<target name="ensure-fib-n" unless="n">
+		<fail message="You must run this target with -Dn=number"/>
+	</target>
+
+	<target name="fib" depends="ensure-fib-n" description="calculate fibonacci of N">
+		<script language="prolog"><![CDATA[
+
+			fibhelp(N,F,N,F1,F2,F).
+			fibhelp(N,F,N1,F1,F2,F3) :- N1 >= N, !, fail.
+			fibhelp(N,F,N1,F1,F2,F3) :- N2 is N1+1, F4 is F2+F3, fibhelp(N,F,N2,F2,F3,F4).
+
+			fibiter(0,0).
+			fibiter(1,1).
+			fibiter(N,F) :- number(N), N > 0, fibhelp(N,F,2,0,1,1).
+
+			bsf_lookup('n', N),
+			% property are strings; they need to be converted to numbers if they are to be recognized as such by JLog
+			% Integer.valueOf(String) is used to convert N to an Integer, and then the bsf_j2p predicate
+			% translates that to a Prolog number term
+			bsf_static('Integer', INT),
+			bsf_invoke(NINT, INT, 'valueOf', [N]),
+			bsf_j2p(NINT, NTERM),
+			fibiter(NTERM, F),
+			bsf_lookup('project', PROJ),
+			bsf_invoke(_, PROJ, 'log', [NTERM]),
+			bsf_invoke(_, PROJ, 'log', [F]).
+		]]></script>
+	</target>
+
+	<target name="script" description="demonstrates manipulating project objects">
+
+		<property name="prop" value="42"/>
+
+		<echo>prop=${prop}</echo>
+
+		<script language="prolog"><![CDATA[
+			% This example retrieves an Ant property called 'prop', increments it by a specified amount,
+			% and saves the new value as a different property named 'prop2'.
+			% Note that all properties are already in the scripts' namespace,
+			% because the Ant <script> task places them there.
+			% The 'project' object is placed into the BSF domain by the script task as well.
+			% Parameters are the name of the property and the value to add to it
+
+			incrementProperty(PROP, INC) :- 
+				bsf_static('Integer', INT),
+				bsf_invoke(OLDVAL_STR, INT, 'valueOf', [PROP]),
+				bsf_j2p(OLDVAL_STR, OLDVAL),
+				NEWVAL is OLDVAL + INC,
+				bsf_lookup('project', PROJ),
+				bsf_invoke(_, PROJ, 'setProperty', ['prop2', NEWVAL]).
+
+			% Only the very last statement is executed, everything before that
+			% is taken to be predicate definitions.
+			% If you want to execute more than one predicate, concatenate them with ',', like
+			% incrementProperty(A, 1), incrementProperty(B, 2).
+
+			bsf_lookup('prop', PROP),
+			incrementProperty(PROP, 11).
+		]]></script>
+
+		<echo>prop2=${prop2}</echo>
+
+		<script language="prolog"><![CDATA[
+			% Calculate a Fibonacci number, create an Echo task,
+			% and print the result as the message to the task.
+			% Also uses the projects log method to print the date to standard out
+
+			logDate :-
+				bsf_create(DT, 'Date', []),
+				bsf_invoke(DATE, DT, 'toString', []),
+				bsf_lookup('project', PROJ),
+				bsf_invoke(_, PROJ, 'log', [DATE]).
+
+			bsf_import('java.util'),
+			logDate.
+		]]></script>
+
+	</target>
+	
+
+	<target name="antlib_copy" description="copy the jar files to the Ant library">
+	
+		<copy todir="${env.ANT_HOME}/lib">
+			<fileset dir="${installDir}" includes="*.jar"/>
+		</copy>
+	
+	</target>
+
+
+</project>
+
+

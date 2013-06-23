@@ -1,0 +1,264 @@
+% The following code is copyright 2004 by Glendon Holst
+% A graphical game of Sokoban for JLog using the AnimationLib.
+
+% An ideal project for CI (Computational Intelligence) students would be adding a 
+% STRIPS Planner for solving the sokoban puzzles.  After calling init_sokoban/2 the 
+% KB (Knowledge Base) is populated with the location of the various game elements
+% ('agent', 'box','palette','wall') using the at/3 predicate (where at(O,X,Y) denotes the 
+% X and Y location for object O).  After planning, invoke play_sokoban/1 with the
+% sequenction of actions (the plan) for solving the puzzle (empty plans denote user
+% interaction to control the agent).
+
+:- load_library('animation').
+:- load_library('filesystem').
+:- dynamic(uid/2).
+:- dynamic(at/3).
+:- dynamic(cached_level_maps/2).
+
+% Demo: ?- sokoban('sokoban.data',1).
+% Demo: ?- sokoban('sokoban.data',2,[right,up,right,right,down,left,left]).
+
+% sokoban(+F,+L) plays sokoban from level L of source filename F (play is interactive).
+
+sokoban(F,L) :- sokoban(F,L,[]). 
+
+% sokoban(+F,+L,+P) plays sokoban from level L of source filename F, using plan P.
+
+sokoban(F,L,P) :- load_sokoban(F,M), init_sokoban(M,L), play_sokoban(P). 
+
+% load_sokoban(F,M) loads sokoban puzzle maps from file named F.  Each element of list M is a
+% level map (a level map is a list of at/4 predicates describing the start state of the puzzle).
+% the at/4 predciate includes the type of the object.
+
+load_sokoban(F,Ms) :- cached_level_maps(F,Ms). % return cached copy if it exists for this file. 
+load_sokoban(F,Ms) :- retractall(uid(_,_)), fs_read(F,L), load_sokoban_help(L,Ml), 
+					writeln('parsing mapfile -- this may take a minute...'), 
+					map_file(Ms,Ml,[]), !,
+					writeln('parsing finished -- enjoy the game...'),
+					retractall(cached_level_maps(_,_)), assert(cached_level_maps(F,Ms)).
+
+load_sokoban_help([],[eol,eof]).
+load_sokoban_help([L|Ls],L3) :- load_sokoban_help(Ls,L2),  
+					atom_chars(L,C), append(C,[eol],L1), append(L1,L2,L3).
+
+% init_sokoban(+Ms,+L) initialize sokoban game from level L of map list Ms.  
+% asserts at/3 position predicate for each object on map level.
+
+init_sokoban(Ms,L) :- animate(init,[1.0]), retractall(at(_,_,_)), 
+					nth1(L,Ms,M), create_objects(M), animate(update,[]).
+
+% play_sokoban(+P) play the current sokoban level using plan P.  A plan is a sequence of actions:
+% (move_up,move_down,move_left,move_right).  P is a list of {left,right,up,down} atoms.
+% If P is [], then play is interactive.
+
+play_sokoban([]) :- not((at(P,X,Y), object_type(P,palette), not((at(B,X,Y), object_type(B,box))))), 
+					!, writeln('YOU WON!'). 
+play_sokoban([]) :- at(P,X,Y), object_type(P,palette), not((at(B,X,Y), object_type(B,box))), !, 
+					writeln('enter action: up,down,left,right:'), read(D), 
+					play_sokoban_move(D), animate(update,[]), play_sokoban([]). 
+
+play_sokoban([D|Ds]) :- play_sokoban_move(D), animate(update,[]), play_sokoban(Ds).
+
+play_sokoban_move(D) :- at(agent,X,Y), get_move_pos(X,Y,D,X1,Y1), 
+					\+ (at(O,X1,Y1), (object_type(O,box) ; object_type(O,wall))), !, 
+					move_agent(D).
+play_sokoban_move(D) :- at(agent,X,Y), get_move_pos(X,Y,D,X1,Y1), 
+					at(B,X1,Y1), object_type(B,box), get_move_pos(X1,Y1,D,X2,Y2), 
+					\+ (at(O,X2,Y2), (object_type(O,box) ; object_type(O,wall))), !, 
+					push_box(B,D).
+play_sokoban_move(D) :- failed_move_agent(D).
+
+% get_move_pos(+X,+Y,?D,?X1,?Y1) X1,Y1 is the position after moving direction D from X,Y.
+
+get_move_pos(X,Y,up,X,Y1) :- Y1 is Y - 1.
+get_move_pos(X,Y,down,X,Y1) :- Y1 is Y + 1.
+get_move_pos(X,Y,left,X1,Y) :- X1 is X - 1.
+get_move_pos(X,Y,right,X1,Y) :- X1 is X + 1.
+
+% object_type(+I,?N) given an object id I, N is the type of that object.
+% uses the first character of I to determine match ('a'=agent, 'w'=wall, 'b'=box, 'p'=palette).
+
+object_type(I,agent) :- atom_chars(I,[A|As]), atom_chars('a',[A]).
+object_type(I,wall) :- atom_chars(I,[A|As]), atom_chars('w',[A]).
+object_type(I,box) :- atom_chars(I,[A|As]), atom_chars('b',[A]).
+object_type(I,palette) :- atom_chars(I,[A|As]), atom_chars('p',[A]).
+
+% create_objects(M) given a level map (list of at/4 predicates, constructs the animation
+% object elements corresponding to the elements of the given list, and asserts the 
+% corresponding at/3 predicates into the KB.
+
+create_objects([]).
+create_objects([at(agent,_,X,Y)|M]) :- create_agent(X,Y), create_objects(M).
+create_objects([at(box,B,X,Y)|M]) :- create_box(B,X,Y), create_objects(M).
+create_objects([at(wall,W,X,Y)|M]) :- create_wall(W,X,Y), create_objects(M).
+create_objects([at(palette,P,X,Y)|M]) :- create_palette(P,X,Y), create_objects(M).
+
+% create_agent(+X,+Y) create 'agent' object at position X,Y.
+
+create_agent(X,Y) :- Nm = agent, assert(at(Nm,X,Y)),
+						animate(create,[Nm,2,2]), 
+					Head1=[(9,2),(11,2),(13,4),(13,6),(11,8),(9,8),(7,6),(7,4)],
+					Body1=[(10,8),(10,14)],
+					Arms1=[(5,10),(15,10)],
+					Legs1=[(5,20),(10,14),(15,20),(10,14)],
+                        animate(setview,[Nm,0]),  
+                        animate(addshape,[Nm,[head,polygon,[Head1,true,lightgray]]]),
+                        animate(addshape,[Nm,[body,polygon,[Body1,false,blue]]]),
+                        animate(addshape,[Nm,[arms,polygon,[Arms1,false,blue]]]),
+                        animate(addshape,[Nm,[legs,polygon,[Legs1,false,blue]]]),
+					Head2=[(2,9),(2,11),(4,13),(6,13),(8,11),(8,9),(6,7),(4,7)],
+					Body2=[(8,10),(14,10)],
+					Arms2=[(10,5),(10,15)],
+					Legs2=[(20,5),(14,10),(20,15),(14,10)],
+                        animate(setview,[Nm,1]),  
+                        animate(addshape,[Nm,[head,polygon,[Head2,true,lightgray]]]),
+                        animate(addshape,[Nm,[body,polygon,[Body2,false,blue]]]),
+                        animate(addshape,[Nm,[arms,polygon,[Arms2,false,blue]]]),
+                        animate(addshape,[Nm,[legs,polygon,[Legs2,false,blue]]]),
+					Xp is X * 20, Yp is Y * 20,
+						animate(setview,[Nm,0]),
+						animate(move,[Nm,Xp,Yp]).
+
+% create_box(+N,+X,+Y) create box N object at position X,Y.
+
+create_box(Nm,X,Y) :- assert(at(Nm,X,Y)),
+					Box=[(2,2),(19,2),(19,19),(2,19)],
+					Diag1=[(2,2),(19,19)],
+					Diag2=[(19,2),(2,19)],
+						animate(create,[Nm,2,1]), 
+                        animate(setview,[Nm,0]),  
+                        animate(addshape,[Nm,[outline,polygon,[Box,false,red]]]),
+                        animate(addshape,[Nm,[diag1,polygon,[Diag1,false,red]]]),
+                        animate(addshape,[Nm,[diag2,polygon,[Diag2,false,red]]]),
+					Xp is X * 20, Yp is Y * 20,
+						animate(move,[Nm,Xp,Yp]).
+
+% create_palette(+N,+X,+Y) create palette N object at position X,Y.
+
+create_palette(Nm,X,Y) :- assert(at(Nm,X,Y)),
+					Box=[(2,2),(19,2),(19,19),(2,19),(2,2)],
+					Slat1=[(2,7),(19,7),(19,5),(2,5)],
+					Slat2=[(2,11),(19,11),(19,10),(2,10)],
+					Slat3=[(2,16),(19,16),(19,14),(2,14)],
+						animate(create,[Nm,1,1]), 
+                        animate(setview,[Nm,0]),  
+                        animate(addshape,[Nm,[outline,polygon,[Box,false,yellow]]]),
+                        animate(addshape,[Nm,[slat1,polygon,[Slat1,false,yellow]]]),
+                        animate(addshape,[Nm,[slat2,polygon,[Slat2,false,yellow]]]),
+                        animate(addshape,[Nm,[slat3,polygon,[Slat3,false,yellow]]]),
+					Xp is X * 20, Yp is Y * 20,
+						animate(move,[Nm,Xp,Yp]).
+
+% create_wall(+N,+X,+Y) create wall block N object at position X,Y.
+
+create_wall(Nm,X,Y) :- assert(at(Nm,X,Y)),
+					Outline=[(2,2),(19,2),(19,19),(2,19),(2,2)],
+					Block=[(4,4),(17,4),(17,17),(4,17),(4,4)],
+						animate(create,[Nm,2,1]), 
+                        animate(setview,[Nm,0]),  
+                        animate(addshape,[Nm,[outline,polygon,[Outline,false,gray]]]),
+                        animate(addshape,[Nm,[block,polygon,[Block,true,gray]]]),
+					Xp is X * 20, Yp is Y * 20,
+						animate(move,[Nm,Xp,Yp]).
+
+% move_agent(+D) moves the 'agent' smoothly in direction D (up, down, left, right).
+
+move_agent(D) :- orient_agent(D), diff_incr(agent,D,X,Y,Xinc,Yinc), 
+					at(agent,Xo,Yo), Xp is Xo * 20, Yp is Yo * 20, 
+					move_agent_help(20,Xp,Yp,Xinc,Yinc), 
+					retract(at(agent,_,_)), assert(at(agent,X,Y)).
+
+move_agent_help(0,_,_,_,_) :- !.
+move_agent_help(N,Xp,Yp,Xi,Yi) :- N > 0, !, N1 is N - 1, Xn is Xp + Xi, Yn is Yp + Yi, 
+					animate(move,[agent,Xn,Yn]), animate(update,[]),
+					move_agent_help(N1,Xn,Yn,Xi,Yi).
+
+orient_agent(D) :- (D == left ; D == right), !, animate(setview,[agent,0]).
+orient_agent(D) :- (D == up ; D == down), !, animate(setview,[agent,1]).
+
+diff_incr(O,up,X,Y,0,-1) :- at(O,X,Yo), Y is Yo - 1.
+diff_incr(O,down,X,Y,0,1) :- at(O,X,Yo), Y is Yo + 1.
+diff_incr(O,left,X,Y,-1,0) :- at(O,Xo,Y), X is Xo - 1.
+diff_incr(O,right,X,Y,1,0) :- at(O,Xo,Y), X is Xo + 1.
+
+% push_box(+B,+D) moves the object B smoothly to in direction D.  Also moves the 'agent' 
+% smoothly the same direction.
+
+push_box(B,D) :- orient_agent(D), diff_incr(B,D,X,Y,Xinc,Yinc), 
+					at(B,Xo,Yo), Xd is X - Xo, Yd is Y - Yo, 
+					at(agent,Xoa,Yoa), Xa is Xoa + Xd, Ya is Yoa + Yd, 
+					Xp is Xo * 20, Yp is Yo * 20, Xap is Xoa * 20, Yap is Yoa * 20,
+					push_box_help(30,B,Xp,Yp,Xap,Yap,Xinc,Yinc), 
+					retract(at(agent,_,_)), assert(at(agent,Xa,Ya)),
+					retract(at(B,Xo,Yo)), assert(at(B,X,Y)).
+
+push_box_help(0,_,_,_,_,_,_,_) :- !.
+push_box_help(N,B,Xp,Yp,Xap,Yap,Xi,Yi) :- N > 0, !, N1 is N - 1, A = agent,
+	(N > 10, Xan is Xap + Xi, Yan is Yap + Yi, animate(move,[A,Xan,Yan]) ; Xan=Xap, Yan=Yap), !, 
+	(N < 21, Xn is Xp + Xi, Yn is Yp + Yi, animate(move,[B,Xn,Yn]) ; Xn=Xp, Yn=Yp), !, 
+					animate(update,[]),
+					push_box_help(N1,B,Xn,Yn,Xan,Yan,Xi,Yi).
+
+% failed_move_agent(+D) moves the agent slightly in direction D, and then returns agent
+% to original position.
+
+failed_move_agent(D) :- orient_agent(D), diff_incr(agent,D,_,_,Xinc,Yinc), at(agent,Xo,Yo),
+					Xp is Xo * 20, Yp is Yo * 20,
+					failed_move_agent_help(5,Xp,Yp,Xinc,Yinc).
+
+failed_move_agent_help(0,_,_,_,_) :- !.
+failed_move_agent_help(N,X,Y,Xi,Yi) :- N > 0, !, N1 is N - 1, 
+					X1 is X + Xi, Y1 is Y + Yi, animate(move,[agent,X1,Y1]), animate(update,[]),
+					failed_move_agent_help(N1,X1,Y1,Xi,Yi),
+					animate(move,[agent,X,Y]), animate(update,[]).
+
+% grammar for sokoban data files:
+% mapline is a line containing: @ - agent, $ - box, . - palette, # - wall, " " - empty space,
+% * - box on palette, + - agent on palette.
+% (X,Y) is the coordinates for each character on the line.
+
+map_file(Z) --> map_blank_line, map_file(Z).
+map_file([Z1|Z2]) --> map_puzzle(0,Z1), map_file(Z2), {Z1 \== []}.
+map_file([]) --> [C], {C == eof}.
+
+map_blank_line --> ";", map_ignore, map_blank_line.
+map_blank_line --> map_space, map_blank_line.
+map_blank_line --> [C], {C == eol}.
+
+map_ignore --> [C], map_ignore, {number(C)}.
+map_ignore --> [C], {number(C)}.
+
+map_puzzle(Y,Z) --> map_line((0,Y),Z1), map_puzzle2(Y+1,Z2), {Z1 \== [], append(Z1,Z2,Z)}.
+
+map_puzzle2(Y,Z) --> map_line((0,Y),Z1), map_puzzle2(Y+1,Z2), {Z1 \== [], append(Z1,Z2,Z)}.
+map_puzzle2(_,[]) --> map_blank_line.
+
+map_line((X,Y),Z) --> map_object((X,Y),Z1), map_line((X+1,Y),Z2), {append(Z1,Z2,Z)}.
+map_line((X,Y),Z2) --> map_space, map_line((X+1,Y),Z2).
+map_line((X,Y),[]) --> [C], {C == eol}.
+
+map_object((X,Y),[at(agent,agent,X1,Y1)]) --> "@", {X1 is X, Y1 is Y}.
+map_object((X,Y),[at(agent,agent,X1,Y1),at(palette,C,X1,Y1)]) --> "+", {X1 is X, Y1 is Y, 
+				get_uid('p',C)}.
+map_object((X,Y),[at(box,C,X1,Y1)]) --> "$", {X1 is X, Y1 is Y, get_uid('b',C)}.
+map_object((X,Y),[at(palette,C,X1,Y1)]) --> ".", {X1 is X, Y1 is Y, get_uid('p',C)}.
+map_object((X,Y),[at(box,C1,X1,Y1),at(palette,C2,X1,Y1)]) --> "*", {X1 is X, Y1 is Y, 
+				get_uid('b',C1), get_uid('p',C2)}.
+map_object((X,Y),[at(wall,C,X1,Y1)]) --> "#", {X1 is X, Y1 is Y, get_uid('w',C)}.
+
+map_space --> " ".
+
+% get_uid(+N,-A), given a name atom N, A is N with a unique number (for name N) concatenated.
+
+get_uid(N,A) :- uid(N,Z), !, Z1 is Z + 1, retractall(uid(N,_)), assert(uid(N,Z1)),
+				atom_chars(N,N1), number_chars(Z1,Z2), append(N1,Z2,N3), atom_chars(A,N3).
+get_uid(N,A) :- retractall(uid(N,_)), assert(uid(N,1)), 
+				atom_chars(N,N1), number_chars(1,Z2), append(N1,Z2,N3), atom_chars(A,N3).
+
+% append/3
+
+append([],L,L).
+append([A|As],B,[A|Cs]) :- append(As,B,Cs).
+
+nth1(1,[M|_],M).
+nth1(N,[_|Ms],M) :- N > 1, N1 is N - 1, nth1(N1,Ms,M).

@@ -1,0 +1,23 @@
+The following file system predicates are optionally supported by JLog.  These predicates are in the filesystem library (filesystemLib.jar), and are loaded as follows:
+
+:- load_library('filesystem').
+
+The file predicates are meant for line-oriented files, rather than character-oriented ones, and are better suited for small-scale use, not heavy-duty tasks.fs_exists(Filename).
+
+Succeeds if a file or directory with the given name exists.fs_isfile(Filename).
+
+Succeeds if a file with the given name exists.fs_isdir(Directory).
+
+Succeeds if a directory with the given name exists.fs_length(Filename, Length).
+
+Succeeds if Filename is an existing file. Length will be an integer with the length of the file in bytes.fs_list(Directory, Filelist).
+
+Succeeds if Directory is an existing directory. Filelist will be a list, each list item will be the name of a file in that directory.fs_makedir(Dirname).
+
+Succeeds if a directory of the given name can be created. This creates only one directory, not the full path if any directories in between are missing.fs_delete(Filename).
+
+Succeeds if the file or directory of the given name can be deleted.fs_read(Filename, Variable).
+
+Succeeds if the contents of the file with the given name can be read into Variable.  Variable will be a list, with each line of the file becoming one list item.fs_write(Filename, Variable, Mode).
+
+Succeeds if the contents of Variable can be written to the given file.  Variable should be a list; each list item will become one line of the output file.  If Mode is 'append', the output will be appended to the file, otherwise the files' contents will be overwritten.

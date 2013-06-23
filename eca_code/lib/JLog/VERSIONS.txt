@@ -1,0 +1,560 @@
+JLog 1.3.6
+==========
+
+е Removed a dependency on Animation from Foundation.  It should be possible to build a minimal *.jar of the core JLog Prolog without compiling Animation or Applet packages.
+
+е Fixed an issue with bagof/3 (and by extension setof/3) when variables were involved. The issue can be seen with the example: 
+
+	bagof(1, (X = X ; X = X; X = Y), Bag).
+
+Where the standard behaviour returns two solutions:
+
+Bag = [1,1]  (where Y is not bound to X)
+Bag = [1]    (where Y is bound to X)
+
+Thanks to Jeff T. for finding and investigating this issue.
+
+е Added =@= and \=@= structural equivalence operators.
+
+е Added equivalence member functions to jTerm and subclasses.  This has similar logic to unify, except that it uses jEquivalenceMapping to track the mapping between variables, and jVariable logic differs.  The equivalence function determines if two terms are structurally equivalent.
+
+е Small optimization in variable unify.  Previously, long binding chains were traversed binding by binding (even though we stepped to the bottom of the binding chain).  Now, this work is used to jump to the last bound term.
+
+е Small optimization to bagof/3 implementation.
+
+е Fixed infinite loop for unification in cases like: (X,X)=(Y,Y). (patch 1782206).
+
+е Fixed jExists to handle case where it is not part of the generator in a bagof/3. E.g., bagof(X^Y, (X=1, Y=2 ; X=3, Y=4), Bag). produced two results instead of the standard one. (patch 1782061).  Thanks to Jeff T. for finding and investigating.
+
+
+JLog 1.3.5
+==========
+
+е Fixed copy method in jListPair.  This affects predicates like: findall/3 and copy_term/2.  For example, the query: findall(Y, (X=a, Y=[X]), L). would produce L=[[_]] instead of L=[[a]].  Thanks to Jeff for find this issue.
+
+е Fixed prove method in jAssert.  Now supports assert/1 predicates with bound variables, such as: H = f(1), assert((H :- true)).  Thanks to Jeff for finding and providing a fix for this issue.
+
+
+JLog 1.3.4
+==========
+
+е Added time/1 predicate which calls a goal term, and reports on the number of milliseconds elapsed.
+
+е Updated the Prolog Information page in Help with more, newer, and working links.
+
+е Noted in help files the behaviour of Fail on Unknown Predicate, when set to true (the default) -- the failure occurs slightly earlier than may be expected (when the predicate is needed as a goal, not when the goal is evaluated).
+
+е Fixed an issue where startup would fail for a single archive (i.e., the *Lib.jar files were not separate).
+
+е Updated the debugger info text view to include horizontal scrolling (so that wide output doesn't mess up the display -- each output takes up a single line, making it easier to follow).
+
+е There was a package naming / directory issue with Builtins/Goals, Builtins/Entries, Terms/Goals and Terms/Entries.  This could manifest itself as problems in some build environments (the file path and file package would differ), or as warnings in Javadoc.  The fix changed the package names for those files in Goals or Entries directories, appending .Goals or .Entries to the package name as appropriate.  Also updated other source files to import these packages if it was needed.  Developers who have created predicates which use goals (or entries, which is less likely) from these affected packages will need to import the new packages for their code to work again.
+
+е Added a secondary build method using Ant <ant.apache.org> (thanks to Ulf for the initial version of build.xml).  A brief mention of its use was added to the README.txt file.
+
+е Updated loadLibrary method so that if a resource is not found in the class path, it will search for the library in the current directory.  This means that filesystemLib and databaseLib, which are not in the class path, can still work (NOTE: at present, for bsfLib to work, the bsf.jar file must be in the class path).
+
+е Updated BSF Library with new version (Thanks again Ulf!).  The changes in the BSF engine are as follows:
+
+- Added Prolog <--> Java Object conversion predicates, bsf_j2p/2 and bsf_p2j/2.
+
+- The BSF library no longer needs to be loaded explicitly via load_library if it's run through a BSFManager; it bootstraps itself if necessary.
+
+- Enhanced type matching for bsf_create and bsf_invoke: Object and String can always be matched to Prolog terms.
+
+- Added another BSF example, PiApp, to the Examples/BSF directory (this one is not built automatically).
+
+- Updated the README.txt file in the Examples/BSF directory with additional information about using BSF and JLog via bsfLib.jar in Ant and Jakarta Taglibs. 
+
+е Updated gJLogApplication to reference Proxy class dynamically (this allows J#, and older version of Java to compile it).
+
+е Added the file InvocationHandler.jsl to the Applet directory.  This is intended for use by J# only, to cover for its missing InvocationHandler interface.  Updated the FAQ.txt file to discuss J# related compiling issues.
+
+JLog 1.3.3 beta
+===============
+
+е Updated FAQ.txt for version 1.3.x (include mention of jNaryBuiltinPredicate, and new INIT_*LIB.TOC file naming scheme).
+
+е Fixed issue with ClassLoader and Applets.  JLog now works as an Applet again.  Made some small changes for compatibility to Java 1.1 in the Animation package (changed Vector methods from add to addElement, and toArray to copyInto).
+
+Note: Currently, JLog will only load libraries which are in the class-path specified in the MANIFEST.MF (not just the same directory as JLog.jar, as it worked previously in JLog 1.2.x).  This means that for now, Extras libraries (e.g., filesystemLib, databaseLib, and bsfLib) are only available to developers creating custom builds (either their own software using the PrologAPI or a modified build of JLog) where the MANIFEST file includes these *Lib.jar files.
+
+е Improved window layout, particularly the Closing, Find, and Goto Line dialogs, which now appear over their associated Consult Window.
+
+е Added support for Find and Goto Line options in the source editor.  Added Find, Find Next, and Goto Line menu options to the Application Edit menu.  Added getCurrentSourceLine, setCurrentSourceLine, getFindString, findSource, and findNextSource methods to gConsultPanel. Added Find and Goto TextFields and Buttons to Applet UI, in Consult panel.
+
+е Updated APIQueens example to use the proper PrintWriter, and to provide a BufferedReader for System.in.  It is now also possible to input the board size when the query is running, and not just on the command line.
+
+е Changed input to use BufferedReader instead of jInputClient / jInputService.  Removed jInputClient.java and jInputService.java files.  Changed jReadGoal to use the BufferedReader for input.  Changed gQueryPanel so it no longer is a jInputService.  Added class gInputStreamTextField which manages the input TextArea and the enter Button, and provides a writer interface.
+
+е Changed output class from PrintStream to PrintWriter.  This will affect PrologAPI, when passing in System.out; instead, pass in: new PrintWriter(System.out);
+
+е When using PrologAPI, exceptions thrown in either the consult or query threads are passed up to the PrologAPI caller.  This means that API users can programatically catch and discover exceptional errors (e.g., SyntaxErrorException during consult, or UnknownPredicateException during query).
+
+е The default behaviour for missing predicates is now Abort (throw an exception).  This makes it more clear which predicates are available, and catches program errors (typos).  If a predicate 'p' is meant to always be false, define it via a rule like:
+
+p :- fail.
+
+Note: A predicate is consider 'missing' if it does not exist in the KB as a rule head, but exists in a rule body, and the rule body is added as goals to the proof (e.g., when the parent goal is evaluated). 
+
+е Variables of the form _* (i.e., start with underscore) are now not displayed in query results (this provides a way specify which results to display).
+
+е Changed show() to setVisible(true) in Examples/BSF/ScriptedUI.java.
+
+е Removed jNullVariable (wasn't used).
+
+е Updated Makefile to use 'cd' instead of 'pushd' and 'popd'.  Some sh shells do not have that latter commands.  Also changed test -e to -f because this is not supported in Solaris. Change classpath in build_*_example to work on Solaris too.
+
+е Updated gJLogApplication constructor so that it compiles on non-MacOS X machines (where com.apple.eawt does not exist) -- yet still supports MacOS X extensions at runtime.  The eawtApplicationAdapter class was changed to an InvocationHandler, and is invoked via a Proxy object.
+
+JLog 1.3.2 beta
+===============
+
+е Fixed the representation for lines to be consistent as a points list (previously getattr returned a different type of list, and setattr didn't work).
+
+е Added optional forms to the create and addshape commands for the animate/2 predicate.  The optional forms return the Object or Shape reference for the newly created object/shape.
+
+е Added convertToTerms method in aAttributeTranslation which supports lists of arbitrary length.
+
+е Added setName method to aAnimationShape and aAnimationObject, and support changing the object/shape name via the setattr animation command.  Added a getShapeView method to aAnimationObject to get the view containing a given shape.
+
+е Changed 'enum' variable names in four classes to either 'e' or 'enum_vars'.  'enum' is a keyword in Java 5, and also in J#.
+
+е PrologAPI now throw an exception if it cannot start the query (previously it returned null, which denotes a query with no results, e.g., fail).
+
+е Fixed a NullPointerException in aAnimationEnvironment update() method.  In application mode, if the Animation window was closed, the graphics environment was null.  Now, no drawing is performed when the graphics environment is null, but the underlying Prolog program keeps running.
+
+е The AnimationEnvironment is now displayed inside a ScrollPane in the AnimationPanel.  
+
+е Added getPreferredSize method to aAnimationEnvironment and getBounds methods to aAnimationObject and aAnimationShape objects.  These are used find the bounding rectangle of all shape displayed in the animation environment (useful if aAnimationEnvironment is within a ScrollingPane).
+
+е Fixed a thread race condition with the use of jAPIQueryThread from jPrologAPI.  This issue would appear if two or more queryOnce calls occurred in succession.
+
+е Modified consultSource in jPrologAPI to block more elegantly by waiting for the APIConsultThread to complete, instead of waiting for the end of consult event.  Removed waitForConsultCompletion and setConsultState.
+
+е made thread related methods of jPrologServices synchronized (e.g., isAvailable, start, suspend, stop, resume, release).
+
+е JLog Threads are now named (via Thread.setName()).  This information is useful during debugging.
+
+е Changed parsing of real (float) values in exponential form to allow integer coefficients (e.g., 1e+10 is now a valid real number), and to make the exponent sign optional (e.g., 1e5 is equivalent to 1e+5).
+
+
+JLog 1.3.1 beta
+===============
+
+е Various updates and changes to the Makefile to build the bsfLib (conditional on lib/bsf.jar existing).  Changed how the API and BSF examples build (they now build into the build directory, and are installed during the regular install phase).  Build phases are broken down into more discrete phases (now easier to build and install just what we want).
+
+е Changed how translation typically works if it has a jPrologServices object.  A problem with the old approach is that terms couldn't make a round trip through the translator.  E.g., a non-zero arity predicate term would get translated to a string, which would be translated back to an atom.  Now, by default, if the translation class has a jPrologServices object registered, it will affect how strings are translated into terms.  Previously they became atoms, but now they are parsed and produce the corresponding jTerm given by the string representation (to produce a jAtom, enclose the string in single quotes).  The round trip translation is still not completely safe (e.g., references to the same variable between different terms can become lost), but it makes the default more sensible than before (the developer can still specify exactly how the transforms are done).  This behaviour is now the default for jPrologAPI (which creates a jTermTranslation with a jPrologServices object by default).
+
+е Updated APIQueens example, moving it to the Examples/API directory, and updated the Makefile accordingly.
+
+е Removed use of iPrologServiceText from jPrologAPI, now uses PrintStream for output (e.g., it is now possible to use System.out and System.err for output).  Made output in jPrologServices use PrintStream.  There is now the concept of a default and the current output.  When queries initiate, the current output is reset to the default.  Changed the output for threads to PrintStream (from iPrologServiceText), because only output is needed (not the ability to set the selection).  Changed users of these threads (gConsultPanel and gQueryPanel) to provide a PrintStream of their ouput text area to the threads.  Created new class gOutputStreamTextArea, which provides an OutputStream interface for TextArea objects.  Changed jInputClient interface to use PrintStream for output (instead of iPrologServiceText).
+
+е Removed getFirstTaggedText and getLastTaggedText from iPrologServiceText and sub-classes.  Removed jPrologServiceTextString.
+
+е Removed jNL and jWriteln classes and files from Builtins.  The nl/0 and writeln/1 predicates still exist.
+
+е Renamed some of the Prolog Thread classes to include Thread in the name.  Part of the reason is to make them more explicit.  In the future, they will be deprecated, and JLog will move to using the current thread (loaded with a dictionary of thread global objects) instead of specialized classes.  Changed jConsultAndQuery to jConsultAndQueryThread, jUserQuery to jUserQueryThread, jAPIQuery to jAPIQueryThread, jAPIConsult to jAPIConsultThread, jConsultSource to jConsultSourceThread, jResetDatabase to jResetDatabaseThread, jUserQueryThread to jRetryQueryThread.
+
+е Added support for the com.apple.eawt.Application* behaviours in MacOS X (inspired by Ulf, thanks again!).  If the classes above exist, then the About and Quit menu items come from the application menu, and the JLog menu is removed.  If the classes above don't exist, JLog reverts to its standard behaviour.  Some modifications were made to gJLogApplication* classes to better support this, mostly making some members static (only one application instance was supported anyway).
+
+е Added the BSFLib from Ulf Dittmer (Thanks Ulf!).  Help is in the bsf_predicates.txt help file, and an example in the Example/BSF directory.  This requires the bsf.jar from the Apache group:
+
+	http://jakarta.apache.org/bsf/
+
+The bsf.jar should be in the lib directory.  If lib/bsf.jar is found during the 'make build' phase, then the bsfLib.jar is created, otherwise it is not.  There is an example in the Examples/BSF directory on the use of the bsfLib (the bsf_ui.plog contains the Prolog portion of the example).  This example is built and installed during 'make build ; make install' provided the lib/bsf.jar file is found.
+
+е Undid a bug fix in jDBSelect, changing: 
+
+	return (!result.unify(tmp, bg.unified))
+to
+	return (result.unify(tmp, bg.unified))
+
+So it succeeds only when the Select result was unified with a variable. (thanks Ulf) 
+
+е Added consultSource method to jPrologAPI (useful when different KBs are required with the same API instance).
+
+е Add jNaryBuiltinPredicate and corresponding goal that is a general purpose any arity builtin predicate.
+
+е In the unary, binary, trinary and quadary builtin predicates, the getArity, getTerm/LHS/RHS, getArguments, and unifyArguments methods were made final.
+
+е In jListPair, made the (get/set)Head/Tail/Node methods final.
+
+е Made several members of jCompoundTerm final.
+
+JLog 1.3.0 beta
+===============
+
+е An important new class, jTermTranslation, and interfaces, iTermToObject and iObjectToTerm, were added to support translation between Prolog jTerm instances and corresponding Java objects (and vis versa).  These provide a unified way of performing translation, and replace the previous inflexible translation code scattered throughout APIQuery, PrologAPI, and the animation classes.  The class supports arbitrary conversion mappings, and has a useful default for conversions (used by the PrologAPI class).
+
+е Added iObjectToTerm and iTermToObject interfaes for mapping between jTerms and Java objects.  Added createListFromEnumeration static method to jListPair, which uses iObjectToTerm subclasses to construct a jList list given an enumeration.  jList will now create Enumeration objects which use iTermToObject to construct translated lists (useful for constructing Vector from a list).
+
+е Modified pVariableRegistry, adding a getVariable method that took a variable name String.
+
+е Modified pParseStream (the main interface to the parser) with an additional parseQuery that takes a Hashtable of variable names, and their associated jTerm bindings.  This supports setting up a query with variables bound to pre-existing objects (can be used in conjunction with jTermTranslation to map from Java objects to their prolog counterpart terms).
+
+е Modified jAPIQuery so that it not longer translates the values associated with variables; instead, it passes back the jTerm bound to the variables.  The jPrologAPI class now performs that translation mappings based upon the jTermTranslation object associated with it.
+
+е Fixed a problem with unbound variables in PrologAPI, which translated to a value of null.  This caused a NullPointException when adding to the Hashtable. The default term translation (jTermTranslation) used by PrologAPI now maps unbound variables to the void.class Java object.
+
+е Added a stop method to jPrologAPI.  Call this after a query if there is no need to retry (it ensures that thread and other resources are released early).  Also added corresponding queryOnce methods; use when only the first result is needed.
+
+е Changed Abort terminology for terminating a query to Stop in the GUI.
+
+еее Modified the loadLibrary behaviour in jPrologServcies to include files in the CLASSPATH.  
+
+Added getResourceURLFromFilename and getResourceInputStreamFromFilename to the iPrologFileServices, and implementations of these to jPrologFileServices.  These behave similarly to the get(URL|InputStream)FromFilename, except that these search through the defined CLASSPATH, and inside *.jar files (not just for files themselves).  Concomitant with this change, the INIT_LIB.TOC files inside the *Lib.jar files must now be named after the library (e.g., for library nameLib.jar, the *.TOC file must be INIT_NAMELIB.TOC) and placed in the root (i.e., / ) of the *.jar hierarchy.  The benefit is that it is possible to search for the required TOC by library name, and it is easier to combine libraries together into a single *.jar file.
+
+еее Reworked the Animation library considerably.  
+
+The first fundamental change is that the underlying coordinate system is now real valued (i.e., floats).  The different coordinate systems are now more distinct.  Global coordinates are the primary coordinate system for objects (magnification does not apply to global coordinates).  Display coordinates are integer based, mapping to pixels in the display (magnification determines the mapping from global to display coordinates).  Local coordinates are object relative coordinates (i.e., deltas from the global coordinates of the enclosing objects) and are the coordinate system used in shapes.
+
+It is now possible to change the magnification of the environment at any time (not just when the environment is created).  See animate(setmagnify,_) in the Help files.
+
+The text display size is now affected by magnification (the font size can now be a float value).  This may affect appearance of old Prolog source code which uses a magnification other than 1, and uses text -- for such old code, change the font size from X (what it is now) to the real number that X/M evaluates to (where M is the magnification) to get the original appearance.
+
+It is possible to change the display level of objects at any time (e.g., so it appears as if an object moves to the foreground from the background). See animate(setlevel,_) in the Help files.
+
+Image shapes now require width and height values specified.  See Help documentation for specifics.
+
+Added a line shape.  Similar to a two point polygon, except there is no fill.
+
+Added a new animate command, 'objects', which returns a list of all objects in the environment.  Each element in the list is a pair (N,O) where N is the name of the object, and O is an object reference (the reference may be used to refer to that specific object instance without the cost of a name lookup, and any parameter expecting an atom name for an existing object will accept an object reference).
+
+Added new animate commands, 'getobject' and 'getshape' for getting references the the aAnimationObject and aAnimationShape object respectively.  These references in place of named atoms in the rest of the API when working with existing objects.  See Help documentation.
+
+Added a new animate command, 'shapes', which returns a list of all shapes, in the current view, embedded in the specified object.  It is similar to the 'objects' command.  See Help documentation for specifics.
+
+Modified the behaviour and signature of the 'removeshape' animate command.  It now requires an object reference to a shape object (instead of the object name, and shape names).  For old code using atom name references of the form: 
+
+animate(removeshape,[Name,[ShapeName]]), 
+
+replace with the following commands: 
+
+animate(getshape,[Name,[ShapeName,[ShapeObj]]]),
+animate(removeshape,[ShapeObj]).
+
+Added 'getattr' and 'setattr' commands that get and set attributes of the given object and shape references.  The attributes are specified via a list of (Key,Value) pairs.
+
+Created the aAttributeTranslation base class for aAnimationObject and aAnimationShape.  This class now contains static versions of the convertTo* methods that were previously in jAnimate. 
+
+Colour is no longer limited to the basic colours, and can now be specified via the rgb/3 predicate.  See Help documentation for addshape.
+
+NOTE: No longer expect animate/2 predicates to either succeed or throw exceptions.  It is now possible for those commands which return values (via unification) to fail, because unification fails.
+
+е Modified (via changes to jName) number_chars/2 and name/2 to support conversion to real number.  The preferred return type is integer, then real, then atom. 
+
+е Modified jNullList class so that only one instance of it exists and it is not possible to instantiate other instances.  Code that previously instantiated a jNullList as follows:
+
+new jNullList();
+
+Should replace it with a reference to the single instance:
+
+jNullList.NULL_LIST;
+
+е Likewise to the jNullList class modification, jTrue and jFail were also modified.  Use jTrue.TRUE and jFail.FAIL instead of creating new instances.
+
+е Modified the getIdentity method of jVariable so that it returns a valid variable name (i.e., without the @ symbol).  This change allows term.toString output to be parsed correctly.  Unnamed variables now appear as _HHH instead of _@HHH.
+
+е Fixed a crash (ClassCastException) in the PrologAPI that occurred when consulting a source file with a :- command that required the use of PrologServices, e.g., :- load_library('animation').  This was because the consult wasn't done inside the proper PrologServiceThread.  A new jAPIConsult now performs the consult in the proper thread environment.
+
+е Extended the internal mutable Array classes with jCreateArray, jSetArrayElement, jGetArrayElement.  These permit the construction of a mutable array of a given initial size (all entries bound to unique variables), setting an array element (zero based), and getting an array element (zero based).  The implementation of the builtin if/3 predicate illustrates how to use and access these predicates.
+
+е Added the if/3 predicate as a built-in.  The definition for this predicate is in the methods get_if, get_IF1 and get_IF2 in jPredefinedBuiltins.
+
+е Removed RegisterPredicates and RegisterOperators methods from jPredefineBuiltins class.  These were no longer used (left-over from the 1.1.5 -> 1.2.x upgrade).
+
+е Fixed name/2 (which threw an exception previously).  It now works as expected.
+
+е Improved the behaviour of the write/1 and writeln/1 family of predicates so that they no longer display variables in the form, X=value, instead they display the value (as other Prolog implementations do).  
+
+
+JLog 1.2.2
+==========
+
+е Fixed a critical error with the unification of lists, and with the display of variables in queries.  The following examples illustrate the problem:
+
+?- [A | T] = [a,b,c].
+A = a  % Should return also with T = [b,c] but it is missing
+
+?- [a,b,c] = [A | T].
+A = a % Should return also with T = [b,c] but it is missing
+
+?- [a,b,c] = [A | T], write(T).
+T = [a,b,c]A = a   % T should be bound with [b,c], not [a,b,c]
+T = [a,b,c]        % serious bug
+
+?- [A | T] = [a,b,c], write(T).
+T = [b,c]A = a     % should return the same result as above
+T = [b,c]          % but it doesn't
+
+The problem originated in jListPair, when it was changed to the long list implementation.  A variable inside a list could get bound to the start of the list (depended upon which list was being traversed in the unify).  This is now fixed.
+
+The second problem (of variables missing from the output), was the result of incorrectly registering variables after the query proof (when they may be bound to values).  It was also exacerbated by the jListPair implementation changes.  This is now fixed, with the benefit that the list of unbound variables is only registered once, when the query is parsed.
+
+е Changed name 'Reset Database' button to 'Reset KB', in Consult pane.  The button is smaller, and the Source text area is wider by default.  Also changed references to 'database' to refer to 'Knowledge Base'.
+
+е The specific use of the 'Helvetica' font is replaced by logical fonts, 'SansSerif' and 'Monospaced'.  Source code and predicates are new displayed with a monospaced font, making them much easier to read.
+
+JLog 1.2.1
+==========
+
+е In Application mode, the keyboard shortcut command-. now aborts a query.
+
+е Made sure the DB and FS library terms use getTerm().toString(), and not just toString() (to get the correct name).
+
+е Fixed JavaDoc warnings.
+
+е Fixed jPrologServiceBroadcaster issue with cached listeners.  Previously the cached vector of listeners could become stale, and some listeners would not be notified of events (this manifested itself as an uneditable source text area for any KB source files opened after a consult was performed on the first source file loaded).
+
+е Changed the Makefile to support additional breakdown of *.jar files for JLog.  Now, JLog.jar contains the GUI components from the Applet package and JLog.java, while jlogic.jar contains the fundamental JLog Prolog engine (i.e., Foundation, Terms, and Parser packages).  This breakdown supports creating stand-alone applications which use the jPrologAPI interface to access the Prolog engine directly for internal processing, since they do not need to include the JLog.jar components in their Class-Path (only the jlogic.jar, builtinsLib.jar, and any other *Lib.jar they need).
+
+The APIQueens.java and APIQueens.MF illustrate how to directly access the Prolog engine via the jPrologAPI, in a command line application.  It is compiled and installed into the JLog directory using the target 'make_api_example'.  Run using the command:
+
+java -jar APIQueens.jar 8
+
+е jReadGoal now throws an exception if the input services are not available (i.e., they are null).
+
+е jAnimateGoal now throws an exception if the animation environment is not available (i.e., it is null).
+
+е There was a semantic problem with the 'tail recursive' optimization of cut goals.  The problem was that the predicate goals which were cut away were required to undo variable bindings.  The following example illustrates the problem:
+
+
+at(b,1).
+at(b,2).
+at(p,2).
+at(p,3).
+
+ok :- !.
+
+% this query fails (but suceeds with debugging on).
+% ?- at(P,X), ok, not((at(b,X),ok)).
+
+% this query suceeds
+% ?- at(P,X), ok,writeln(''),not((at(b,X),ok)).
+
+The current solution keeps the optimization in the case that the previous cut was for the same predicate (rule definitions) and rule.  This means that multiple-recursive predicates, and (potentially) singly-recursive predicates with multiple rules,  are not optimized.
+
+е Added jPrologAPI, an API class for easy programmatic access to the Prolog engine (i.e., for making queries, and recovering the answers).  The class can map Java types to Prolog strings (e.g., Boolean to "true" or "fail", Vector and Enumeration to list strings, null objects to unnamed variables "_", Strings become single quoted atoms, and the rest become their toString() value), or JLog Prolog types to corresponding Java Objects (e.g., jInteger to Integer, jReal to Float, jObject to the Object reference, jList to Vector, jTrue or jAtom.equal("true") becomes a true Boolean, jFail or jAtom.equal("fail") becomes a false Boolean, jVariable becomes null, and everything else is their toString value).  Added jAPIQuery, a query / retry thread designed to support the basic needs of jPrologAPI. 
+
+Use of this class is illustrated with the APIQueens.java example (built using 'make_api_example' target), which provides a command line interface to the queens.plog KB. More documentation is available in the JavaDoc comments of the source files (and in the technical documentation).
+
+е Created a class jPrologFileServices, static methods implementing file system based file services of iPrologFileServices.  The body of the getTextFromInputStream and convertStringLinebreaks methods from gJLogBase were moved here (gJLogBase still provides the same functionality), as well as the body of getURLFromFilename and getInputStreamFromFilename methods from gJLogApplicationBase (which also still provides the same functionality).  jPrologFileServices is a convenience class for reading files, and is used by jPrologAPI as the default file services for jPrologServices.
+
+е Moved the copyright attribution information into the jPrologServices class as a static member.  All previous instances of getRequiredCreditInfo remain, but now invoke the jPrologServices version (this better supports the three models of JLog products: Applet, Application, and API).
+
+е Added jObject, a term for representing a Java Object.  Not yet used, or fully tested.
+
+е Lists can now be arbitrarily long (dependent upon available memory) instead of limited by Java's program stack.  This was done by replacing recursive Java calls with either loops, or loop using a Stack.  Additionally, the constant tail of a list is not duplicated, thus saving memory.  Note:  this does not apply to the, rarely used, ./2 representation of lists (which are not represented internally as lists in JLog).
+
+е Fixed potential issue when Java Error exceptions were thrown (e.g., out of stack and memory) where the query was not properly completed.  This affected menu options and buttons for performing queries (since they never receive the query ended event).  Now these errors are caught, displayed, and re-thrown, and the ending event is always sent.
+
+е Fixed Window menu in Application mode.  Clicking the name of a consult window now brings it to the foreground.
+е Fixed Tools:Debug menus in Application mode.  These now work as expected. (A change in the behaviour of the AWT meant they were not getting the state change or the click -- the previous code remains commented out, in case the new code doesn't work on older JVMs).
+
+е Made animation double-buffer to eliminate flicker.
+
+е Added Sokoban example (suitable for adding a STRIPS planner for a class assignment / project).
+
+JLog 1.2.0
+==========
+
+е Fixed 'needs saving' dialog issue for newly opened, unchanged source files.
+
+е Fixed null pointer issue preventing opening existing KBs when an untitled KB already exists.
+
+е The j*BuiltinPredicate classes now have a default j*BuiltinPredicateGoal associated with them, making it easier to add predicates (most will not need their own goal type).  This somewhat reduced the number of goal classes.  See the Extras.FileSystem package for an example, or read the FAQ.txt file.
+
+е jAtom now optimized so that arguments (which was an empty jCompoundTerm instance) is now static, and shared between all atoms (saves space).
+
+е Added atan/2, log/2, log2/1, and log10/1.  atan/2 works the same as Math.atan2 in Java (i.e., atan(l,r) computes the arc tangent of l/r between -pi and pi).  log/2 have the base as the first parameter (e.g., log(l,r) is log[base l](r).)  log2 and log10 are slightly optimized log functions for base 2 and base 10 respectively.
+
+е The INIT_LIB.TOC file is parsed a library load time.  The possible entries are:
+
+# line comment -- does nothing
+LoadClass: classname
+RegisterGenericPredicateEntry: "name" arity classname
+RegisterGenericOperatorEntry: "name" type priority allow_atom classname
+
+Where, classname is a fully qualified classname string (with package name), "name" is the name of the predicate or operator (the quotes are recommended, but not required), arity is a number, type is an operator type string (e.g., XF, XFY, FY), and allow_atom is a boolean (e.g., TRUE, FALSE) that determines if the operator name could also be an atom.
+
+е Updated gHelpPanel with addition gHelpTopic types.  This is now an About JLog section, and a listing of all rules, predicates, and operators currently registered in the KB.  Documentation is not yet available for predicates, but should match behaviours of Sicstus or SWI-Prolog.  There are help entries for the filesystem and database libraries.
+
+е Fundamentally changed how jPredefined works.  Now, jPredefined is an abstract class, providing useful services for adding predicates to the KB.  These services ensure that any predicates, predicate entries, or operator entries, have the associated library name.  When a library is loaded, any subclasses of jPredefined are instantiated, and the 'register' method invoked.  Subclasses of jPredefined are needed to add complex predicates (made by combining predicates into rules via coding).  
+
+е Builtins are now automatically loaded like a library (from builtinsLib.jar).  This makes JLog.jar smaller, and allows the GUI to load first, and hopefully faster (when compiled for JVM version 1.1, there is no benefit since all classes are added to JLog.jar). 
+
+е Reorganized the packages somewhat to make Foundation, Terms, and Parser independent from Builtins.  The Terms package now contains some core builtin predicates and operators.  The Goals package is now gone, and the goal classes are placed in the package containing their corresponding predicate terms.  For small packages like Animation, the goal source files are in the same directory, while in larger packages, like Term and Builtins, they are placed in a subdirectory (but they are still in the same package).
+
+е Added abolish/2 to the Builtins.
+
+е Created generic predicate and operator entry objects (pGenericOperatorEntry and pGenericPredicateEntry) that dynamically construct the instances given the name, arity, class name etc.  This means that most predicates and operators no longer need a corresponding parser class (entries are still needed at runtime for instance construction, but this is now handled generically).  Generic predicate and operator entries can be specified in the INIT_LIB.TOC file for the library. This removed many classes from the Parser package, and made the JLog.jar file much smaller.
+
+е Created a new command predicate / operator, load_library/1, which takes an atom with the library name, sans the 'Lib.jar', and attempts to load and register its predicates.  The main class for this is jLoadLibrary.  Note: With applets, only *Lib.jar files in the ClassPath: of the MANIFEST.MF file are searched (for JLog.jar this only includes animationLib.jar).  For applications, any *Lib.jar file in the same directory as JLog.jar can be loaded.  Note Also:  The ClassPath: technique only works with Java VM version 1.2 and higher.  By default, the 'build' target of the make file does not include the Animation package class files in the main JLog.jar, therefore the 'animation' library cannot be loaded in JVM version 1.1.x (such as the default Java VM in MS IE).  
+
+е MS IE users should upgrade to the newest version of Java from the http://www.java.com/ site, for future compatibility, and to get rid of the reminder dialog.
+
+е There is a special way to build the JLog.jar files for MS IE with the 'build_old' target.  This is only required if you intend to recompile the sources (the pre-compiled Applet version does work with MS IE).
+
+е Thanks to Ulf Dittmer for two Extras packages for database and filesystem access predicates.  These are located in ubc/cs/JLog/Extras/DataBase and ubc/cs/JLog/Extras/FileSystem respectively.  They are available via: 
+
+	:- load_library('database'), and 
+	:- load_library('filesystem').
+
+In future, predicate code (e.g., predicates, goals, parser objects) for predicates that are not fundamental Prolog builtins will be located under ubc/cs/JLog/Extras, grouped in their own directory, and will be packaged as separate libraries (so JLog.jar will not bloat so much, and to speed loading times in the typical cases).
+
+NOTE: I have not fully tested these libraries...
+
+е pOperatorEntry, pPredicateEntry, jRuleDefinitions and the their sub-classes can now associate with a library (this is used to check for name clashes, and in the future could be used to support namespaces).  InvalidLibraryEntryException is thrown if the library name is changed after being set (predicates and operators shouldn't migrate).  The null library (the default) is for user defined predicates.
+
+е Changed the Makefile to support more targets: 'compile' compiles all the JLog source files (including extras), 'jar' now creates all the *.jar files, 'jar_jlog' creates the main JLog.jar file, 'jar_extras' creates any add-on (extras) jar files, 'jar_animation' creates the animationLib.jar.  'build' compiles the sources and creates all the class jars.  Target 'build_old' creates a version suitable for older version 1.1 Java VMs.
+
+е jAnimateGoal.java was moved from Goals to the Animation directory, pAnimationPredicateEntry.java was moved from Parser/Entries to the Animation directory, and the package was changed to package ubc.cs.JLog.Animation. These classes are now in the separate animationLib.jar, and now must be loaded via the command at the beginning of the source file to make them available: 
+
+	:- load_library('animation').
+
+е pPredicateRegistry and pOperatorRegistry now use a Hashtable for predicate/operator lookup.  This can have a noticeable improvement on programs which invoke dynamic calls (call/1), especially in larger KBs. jKowledgeBase also uses a Hashtable for lookup, which should help assert, retract, and clause predicates.
+
+е Added jCallN/[2..] and jCallNGoal which support an n-ary arity call predicate.  The restrictions are that the first argument must be either an atom or non-builtin predicate -- this argument gives the name of the predicate to invoke, and the initial arguments, while the remaining arguments to call are the remaining arguments for the invoked predicate. e.g., queens(8,X), call(queens(8),X), and call(queens,8,X) are now equivalent semantically (they may however, differ in performance). 
+
+е There is now support in the parser and the predicate registry for builtin predicates which take an arbitrary number of arguments. pPredicateEntry now has the member isArity to determine if the predicate will support the proposed arity.
+
+е Added jVariableNull in preparation for a type of variable optimization on unnamed variables -- not sure if this optimization is worth it (it complicates jClause).
+
+е Factored jType into the the interface iType and the abstract class jType.  Same for jTerm.  iList is now an interface (instead of an abstract class), and jList is now the abstract list type, while jListPair is the list pair, and jNullList is the null list, as before.  Unfortunately, at present, because the abstract classes are already used extensively as the fundamental types, it is not possible to implement new term classes without extending the abstract ones.
+
+е Replaced some occurrences of 'instanceof' in performance critical places (e.g., prove) with term.type == TYPE_*, where TYPE_* comes from jType.
+
+е Changed variable assert to assert_it in jAssertGoal, since assert is a keyword in Java 1.4.
+
+е Fixed jWriteGoal for nl case when term variable was null.  Previously it would try to do a term.toString() for the null term.  This appeared in the debugger which displayed information about the goals.
+
+е Fixed the parser to properly handle '+', '-' symbols that immediately precede a number.  Previously these were handled as unary arithmetic operations, which caused problems when unifying with numbers, or when using expressions such as X is 1 + -1.  A new token class, pUnaryNumber, was added to the parser.  This class encapsulates the possibly dual nature of this sequence of tokens (e.g., X is 1-1. means that the '-' is a binary operator).  The tokenizer and pre-parser were also modified slightly to generate, and handle this new token type.
+
+е Cut (!) now performs a simple tail-recursive optimization if possible.  For example: 
+
+t(N) :- writeln(N), N1 is 1+N, !, t(N1).
+
+Will not grow the proved stack.  This also works for multiple recursion.  For this to work, the second to last predicate in the rule body must be the cut (!), and the last predicate should invoke a rule with the same property.  The GoalStack was changed to have a peekn method (to peek at the nth goal). The CutGoal was changed to remove the current cut, and it's associated rule goal (which performed the cleanup for the cut, when it fails), if there is a cut goal, with another associated rule goal preceding it in the stack.  The DebugProver was also modified to account for disapearing goals.
+
+е jAtom can now have an empty string.  This allows the query: X = ''. Predicates must still have non-empty name strings.
+
+е jTermToList (=..) now converts jConjuctTerms to lists as well.  This involved a number of small changes to pOperatorEntry to make the createOperator(jTerm,jTerm) method public (affect all sub-classes). jTermToList.prove() changed to pass in the OperatorRegistry, and when the RHS is a list, to first try and construct a predicate, then construct an operator, and then a generic predicate.  For example, =..((a,b,c,d),A). and =..((a :- b,c,d),A). now work.
+
+
+JLog 1.1.5
+==========
+
+Thanks to Ulf Dittmer for inspiration and sample code for the Application version of JLog.
+
+JLog now works as both an Applet and an Application (depending on how it's invoked).  Supports opening and saving Prolog source files locally.  
+
+Added a manifest.txt file and updated the Makefile to include the manifest.txt file.
+
+Added a stateChanged notification type to jPrologServices. Currently listeners are notified if FailUnknownPredicates or Debugging states are changed.  The gDebugPanel, and checkbox menu items use this to update.
+
+gJLogApplication now uses gQueryPanel as the contents for its main window (instead of gMainPanel).
+
+Added gAnimationWindow, gConsultWindow, gHelpWindow, gDebugWindow, and gQueryWindow.  These represent their corresponding g*Panel classes inside a separate window.
+
+Added gAboutDialog, to display credit information in application mode.
+
+gConsultPanel now has two modes: in one mode the consult and reset buttons are shown, in the application mode they are not shown.  The button functionality is available from the menu in this latter mode.
+
+gDebugPanel now has two modes: in one mode the the debug style checkboxes are shown, in the application mode they are not shown.  The checkbox functionality is available from the menu in this latter mode.
+
+gQueryPanel now has two modes: in one mode the the Pause and Abort buttons are shown, in the application mode they are not shown.  The button functionality is available from the menu in this latter mode.
+
+renamed setRunstate to setRunState in gDebugPanel.
+
+Added method selectAll() to iPrologServiceText interface.
+
+Added isAvailable and release functions to jPrologServices.  release is a way for threads which use jPrologServices (only one user thread at a time) to release themselves as users before they terminate (in this way they can broadcast a completion event when jPrologServices is available again -- instead of immediately before).
+
+added random/1 predicate.
+
+
+JLog 1.1.3
+==========
+
+Added instance of Random to jPrologServices.  Instance accessible via getRandomGenerator member function.  In preparation to support random/1 function.
+
+Added once/1 and ignore/1 predicates, for compatibility with SWI-Prolog.
+
+Added ** operator :- op(200,xfx,**), and predicate for pow/2, for compatibility with SWI-Prolog.
+
+The truncate/1 predicate now produces an integer.  
+
+Added support for corrected linefeeds to the Help panel (so now text does not run together, but appears properly spaced as written).
+
+Placed p*Entry.java files previous in the Parser directory, into the Parser/Entries directory (except for the p*Entry classes that are base classes - pPredicateEntry.java, pOperatorEntry.java, and pPredicateOperator.java).  The purpose of this was to separate the parsing engine from the object which denote the existence and attributes of the predicates and operators.  In the future, we should automatically generate these objects using reflection. 
+
+Uses DocumentBase throughout for the base location of source files (previously CodeBase was used).
+
+Replaced getURLFromFilename and getTextFromURL with getInputStreamFromFilename and getTextFromInputStream.  This behaviour supports both Applets and Applications.
+
+There is now a iJLogApplBaseServices interface and a gJLogBase class that provides the interface for the base services, and the implementation of most common base services (reading files and parameters).  The latter does not assume either an Applet or Application style program.  gJLogAppletBase is modified to use gJLogBase and provide the iJLogApplBaseServices interface.  Because gJLogAppletBase is a parent delegate of the member gJLogBase, gJLogAppletBase can override the behaviours of gJLogBase.  In a similar way the new gJLogApplicationBase class provides a foundation for applications.
+
+aAnimationEnvironment was changed to use iJLogApplBaseServices to aquire an image, instead of requiring an owning applet.  Not fully tested -- works for applications, but image doesn't appear for applet.
+
+gHelpPanel also changed to use iJLogApplBaseServices.
+
+gMainPanel is now a panel, and not an Applet.  gJLogApplet is now the main applet class, and gJLogApplication is the application class.  Both use gMainPanel.  For a radically different user interface, it would be better to subclass gJLogAppletBase, or gJLogApplicationBase.
+
+
+JLog 1.1.2 
+==========
+
+Factored gJLogAppletBase to support reading arbitrary files from URLs. 
+
+Updated the iPrologServiceText interface to support removal of text and finding, getting, and removing portions of tagged text.  
+
+Also updated the jPrologServiceTextString, gPrologServiceTextArea, and gPrologServiceTextField classes to support broadcasting via jPrologServiceBroadcaster. Together with the update to iPrologServiceText, this allows for some more refined UI interaction with the underlying Prolog engine from Java.  A single hidden text output container can now feed many other UI elements and listeners.  For example, by wrapping any programmatic Prolog output in special tags, such as <display></display> or <url></url>, the Java UI can determine which text to show to the user (maybe in something other than a text box), and which text to use internally as commands.
+
+In effect a hidden output acts like a packet stream, sending data to multiple source.  The proper solution would be to support streams in read/2 and write/2.  Part of this hack would make a good foundation for the proper solution.
+
+This version fixes the problem where automatic queries could not be stopped or restarted.  
+
+This version also fixes a problem where output from write/1, and writeln/1 predicates would not appear on the output as expected.
+
+jPrologServiceBroadcaster was improved so that it is safe to add and remove listeners during a broadcast.  This is done via a cached Vector.  The memory requirements will double (they are fairly slim to begin with), but there is no performance penalty unless an add or remove is done.  The next time a broadcast occurs, the cache will be updated.
+
+Fixed the sim.plog example code so that the environment was properly reset at the beginning of a robot simulation.  Previously, an aborted query would leave asserted predicates in the KB that would affect the next query.
+
+JLog 1.1.1 
+==========
+
+Added constructors to jPrologServiceTextString. Fixed even more annoying line breaks problem with IE on PC.  The line breaks were completely removed from the parameter String, so we now read the prolog source file from a separate file.  The file is specified via the "url" param.  The previous method for including the source remains.
+
+JLog 1.1.0 
+==========
+
+Fixed the annoying linefeed problem in the parameter text (this affected Internet Explorer primarily, and prevented the use of preloaded examples).  getParameter now adds the linefeeds correctly.
+
+Added "pane" and "action" parameters.  This supports preloaded examples that automatically consult, query, and switch to the appropriate pane.  The sim.html example now uses this.
+
+Removed dependence on the AWT TextArea and TextField classes from PrologService* Foundation classes.  Instead we use iPrologServiceText to specify the the required interface.  jPrologServiceTextString implements this for Strings.  This supports reading and writing to strings, without a user interface (or with modified user interfaces). gPrologServiceTextArea and gPrologServiceTextField are iPrologServiceText wrappers for TextArea and TextField.
+
+Split the applet into the gMainApplet, and gJLogAppletBase classes.  The latter provides the basic prolog services, sans user interface, and should be the superclass for any derivative applet.
+
+JLog 1.0.5 
+==========
+
+First released to SourceForge.
+
+JLog 1.0.4 
+==========
+
+Added GNU license to all source files.
+
+JLog 1.0.2 
+==========
+
+JavaDoc documentation added to source. The documentation is not complete, but 
+it should suffice to extend the prolog system (e.g., add new predicates or goals).
+
+JLog 1.0.0 
+==========
+
+Original Release
+

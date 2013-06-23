@@ -1,0 +1,71 @@
+The following BSF (Bean Scripting Framework) predicates are optionally supported by JLog.  These predicates are in the BSF library (bsfLib.jar), and are loaded as follows:
+
+:- load_library('bsf').
+
+
+BSF enables a Java host program to call scripts or programs written in other  languages in a language-neutral way. That means that a BSF-enabled application  can 
+
+a) call scripts and programs written in other languages without knowing in  advance in which language they might be (embedding), and 
+b) that any language for which a BSF engine is available can be used to script a BSF-enabled Java  application (scripting). 
+
+Currently, BSF engines are available for JavaScript, XSLT, Jython, Python, Ruby, ObjectScript, NetRexx, TCL, Groovy and now for Prolog.  
+
+BSF has been released under the Apache License and can be found at http://jakarta.apache.org/bsf/.   
+
+Ulf Dittmer is the author of the JLog/BSF integration library, bsfLib.jar, which is distributed with JLog.  You can contact the author at: udittmer@yahoo.com
+
+Predicates 
+
+JLogBSFEngine defines a number of Prolog predicates that can be used for Prolog <--> Java interaction. 
+
+bsf_register(Name, Bean) 
+
+Stores the object in variable Bean under the given name in the registry. Name must be a string or a variable bound to a string. Bean must be a bound variable. 
+
+bsf_lookup (Name,ResultVar) 
+
+Looks up the object of this name in the registry, and returns it in the variable  ResultVar. Name must be a string or a variable bound to a string.  
+
+bsf_unregister(Name) 
+
+Removes the object with this name from the registry. Name must be a string or a variable bound to a string.  
+
+bsf_import(Package) 
+
+Adds the given package name to the lists of imports, so that all Java objects in that package can be referenced just by their classname, instead of by their fully qualified name. java.lang is imported automatically.  Package must be a string or a variable bound to a string.  
+
+bsf_static(Class, ResultVar) 
+
+Retrieves a class and stores it in variable ResultVar, so that static methods can be invoked on it (e.g. Integer.valueOf). Can also be used to retrieve static fields of classes (e.g. java.lang.System.out). Class must be a string or a variable bound to a string.  
+
+bsf_create(ResultVar, Class, Parameters [, Types]) 
+
+Prolog wrapper for a Java constructor. The resulting object of class Class is put in  the variable ResultVar. Parameters is the list of parameters. The Java equivalent  would be ResultVar = new Class(Parameters) bsf_create/3 (w/o the Types parameter) tries to figure out the correct method  signature based on the types of the given parameters. This works in most cases,  but not always. If it can‘t decide which constructor to use, an exception is thrown that advises to use bsf_create/4 instead. That means that the list of parameters is needed to select the right one. 
+
+bsf_invoke(ResultVar, Bean, Method, Parameters [, Types]) 
+
+Prolog wrapper for a Java method invocation. Its Java equivalent would be ResultVar = Bean.Method(Parameters) bsf_invoke/4 (w/o the Types parameter) tries to figure out the correct method  signature based on the types of the given parameters. This works in most cases, but not always. If it can‘t decide which method to use, an exception is thrown that  advises to use bsf_invoke/5 instead. That means that the list of parameters is needed to select the right one. 
+
+bsf_addevent(Bean, Action, Script) 
+
+This causes the Prolog code in Script to be executed whenever the Java object Bean fires an Action event. Bean must be bound to a Java object. Action and Script must be strings or bound to a string.
+
+bsf_j2p (Object, Term)
+
+Converts Object, which must be a Java object, to a Prolog term. 
+
+bsf_p2j (Term, Object)
+
+Converts Term, which must be a Prolog term, to a Java object.
+
+
+Restrictions And Problems 
+
+This section lists some of the restrictions one should be aware of.   
+
+* Custom events are not supported. Only the events in java.awt.event can be used, as well as java.beans.VetoableChange and java.beans.PropertyChange. 
+
+* Array parameters can only be of type Object[] or String[], everything else is not handled and will fail.  
+
+* Declared beans are not supported, since Prolog has no notion of variables outside of a predicate.  Declaring beans simply registers them. 
+

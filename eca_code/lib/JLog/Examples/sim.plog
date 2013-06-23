@@ -1,0 +1,389 @@
+% Computational Intelligence: a logical approach. 
+% Prolog Code.
+% ROBOT CONTROLLER (Section C.7)
+% Copyright (c) 1998, Poole, Mackworth, Goebel and Oxford University Press.
+% Additional changes to support Animation in JLog by Glendon Holst
+
+:- op(1110,xfx,<-).  % object-level IF
+:- op(1000,xfy,&).   % object-level AND
+:- op(950,fy,~).     % object-level NOT
+:- op(700,xfx,~=).   % object-level NOT EQUALS
+
+:- load_library('animation').
+
+% assigned(Fl,Val,T) is true if fluent FL was
+% assigned value Val at time T. We exploit the fact
+% that the simulation runs forward and make sure that
+% the first fact in the database always represents
+% the latest time that the fluent was assigned a
+% value. This means that we can always look up the
+% last value assigned to a fluent quickly.
+:- dynamic(assigned/3).
+
+% tried(Fl) is true if fluent Fl has been tried to determine
+% if it should be assigned a value for the current time.
+:- dynamic(tried/1).
+
+% sim(T0,T2,DT) means simulate the system for all
+% times in range [T0,T2] in increments of DT.
+sim(T0,T2,DT) :-
+   T0 =< T2,
+   !,
+   prove_all_assigns(T0),
+   view_all(T0),
+   retractall(tried(_)),
+   T1 is T0+DT,!,
+   sim(T1,T2,DT).
+sim(_,_,_).
+
+% clear clears the database for another simulation
+clear :-
+   retractall(assigned(_,_,_)),
+   retractall(tried(_)).
+
+% prove(G,T) is true if G can be proved at time T, but where
+% special care is taken to remember state (assigned
+% values) rather than recomputing.
+prove(true,_) :- !.
+prove((A & B),T) :- !,
+   prove(A,T),
+   prove(B,T).
+prove((A ; B),T) :- !,
+   (prove(A,T);
+   prove(B,T)).
+prove(val(Fl,Val,T),T) :-
+   \+ tried(Fl),
+   asserta(tried(Fl)),
+   prove(assign(Fl,V1,T),T),
+   asserta(assigned(Fl,V1,T)),
+   !,
+   Val=V1.
+prove(val(Fl,Val,T),_) :-
+      % either tried or can't currently be assigned 
+      % look up latest value
+   assigned(Fl,V1,T1),
+   T1 =< T,
+   !,
+   Val=V1 .
+prove(was(Fl,Val,T1,T),_) :-
+   assigned(Fl,V1,T1),
+   T1 < T, !,
+   Val=V1.
+prove((A ~= B),_) :-
+   \+ (A = B).
+prove((~ G),T) :-!,
+   \+ prove(G,T).
+prove(G,_) :-
+   builtin(G),
+   !,
+   call(G).
+prove(H,T) :-
+   (H <- B),
+   prove(B,T).
+
+% builtin(G) is true if G is built-in
+builtin((_ =< _)).
+builtin((_ >= _)).
+builtin((_ = _)).
+builtin((_ < _)).
+builtin((_ > _)).
+builtin((_ is _)).
+
+% prove_all_assigns(T) is true if all assignments
+% of values to variables are proved and remembered
+% for time T
+prove_all_assigns(T) :-
+   fluent(Fl),
+   \+ tried(Fl),
+   asserta(tried(Fl)),
+   prove(assign(Fl,Val,T),T),
+   asserta(assigned(Fl,Val,T)),
+   fail.
+prove_all_assigns(_).
+
+fluent(Fl) :-
+   (assign(Fl,_,_) <- _).
+
+% view_all(T) lets us print out all of the view
+% variables for time T. This lets us monitor the
+% simulation.  view(G,T,P) is true if the command
+% P should be printed when G is proved at time T
+view_all(T) :-
+   view(G,T,P),
+   prove(G,T),
+   call(P),
+   fail.
+view_all(_) :- animate(update,[]).
+
+
+% ROBOT SIMULATOR
+% this is for a car-like robot with one whisker
+% sticking 30 degrees to its right
+
+% ROBOT CONTROLLER for layer
+%
+%                 arrived         goal_pos
+%                    ^              v
+%                    |              |
+%                    ^              v
+%                 ------------------------
+%                 |                      |
+%                 |                      |
+%   goal_pos ---> |                      | ---> goal_pos
+%                 |                      |
+%                 |                      |
+%                 ------------------------
+%                    ^              v
+%                    |              |
+%                    ^              v
+%               robot_pos         steer
+%               compass
+%               whisker_sensor
+
+% INPUT commands
+% goto(L,T) is true if the robot should go to location L at time T
+
+% OUTPUT percepts
+% arrived(T) is true if the robot has arrived at location L at time T
+
+% INPUT percepts:
+% current_pos(C,T) is true is the robot is at coordinates C at time T
+% compass(D,T) the robot is pointing in direction D at time T
+% whisker_sensor(on,T) the whisker sensor of the robot is on at time T
+
+% OUTPUT commands:
+% steer(D,T) means steer Dwards at time T. D in {left,right,straight}.
+
+% The following declaration declares what it is that we view during the
+% simulation.
+view(val(robot_pos,(X,Y),T),T,animate(move,[robot,X,Y])).
+view(val(compass,R,T),T,animate(rotate,[robot,-(1.570796327+R*3.141592653589793/180)])).
+view(arrived(N,T),T, animate(addshape,[N,[visit,text,['V',[geneva,plain,2.2],red,-1,1]]])).
+%view(arrived(T),T,(M is (T / 20) + 1.0, animate(setmagnify,[M]))).
+%view(val(robot_pos,(X,Y),T),T,writeln([X,' ',Y])).
+%view(val(robot_pos,(X,Y),T),T,writeln(['X=',X,' Y=',Y,' at T=',T])).
+%view(val(compass,V,T),T,writeln(['  Compass: ',V,' at ',T])).
+%view(steer(D,T),T,writeln([' Steering: ',D,' at ',T])).
+%view(arrived(T),T,writeln([' *** arrived at ',T])).
+%view(val(todo,A,T),T,writeln(['   To do:',A])).
+%view(val(goal_pos,A,T),T,writeln(['   goal pos:',A,' at time ',T])).
+
+
+%===================================================================
+
+% announcing completion
+arrived(T) <-
+   was(goal_pos,Goal_Coords,_,T) &
+   robot_pos(Robot_Coords,T) &
+   close_enough(Goal_Coords,Robot_Coords).
+
+arrived(L,T) <-
+   was(goal_pos,Goal_Coords,_,T) &
+   at(L,Goal_Coords) &
+   robot_pos(Robot_Coords,T) &
+   close_enough(Goal_Coords,Robot_Coords).
+
+% close_enough(C0,C1) is true if coordinates C0 are close enough to C1
+close_enough((X0,Y0),(X1,Y1)) <-
+   abs((X1-X0)*(X1-X0)+(Y1-Y0)*(Y1-Y0)) < 9.0 .
+
+% OUTPUT:
+% steer(D,T) means steer Dwards at time T. D in {left,right,straight}.
+%    Here is a bang-bang controller to steer towards the right direction
+
+
+steer(D,T) <-
+   ~ whisker_sensor(on,T) &
+   goal_is(D,T).
+steer(left,T) <-
+   whisker_sensor(on,T).
+
+
+goal_is(left,T) <- 
+   goal_direction(G,T) & 
+   val(compass,C,T) &
+   (integer(G-C + 540) mod 360 - 180) > 11.
+goal_is(straight,T) <- 
+   goal_direction(G,T) &
+   val(compass,C,T) &
+   abs(integer(G-C + 540) mod 360 - 180) =< 11.
+goal_is(right,T) <-
+   goal_direction(G,T) &
+   val(compass,C,T) &
+   (integer(G-C + 540) mod 360 - 180) < -11.
+
+goal_direction(G,T) <-
+   robot_pos((X0,Y0),T) &
+   val(goal_pos,(X1,Y1),T) &
+   direction((X0,Y0),(X1,Y1),G).
+direction((X0,Y0),(X1,Y1),Dir) <-
+   Y0=<Y1 &
+   Dir is 180 * acos((X1-X0)/sqrt((X1-X0)*(X1-X0)+(Y1-Y0)*(Y1-Y0))) / 3.141592653589793 .
+direction((X0,Y0),(X1,Y1),Dir) <-
+   Y0>Y1 &
+   Dir is 360 - 180 * acos((X1-X0)/sqrt((X1-X0)*(X1-X0)+(Y1-Y0)*(Y1-Y0))) / 3.141592653589793.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ROBOT CONTROLLER for higher layer
+%
+%                 ------------------------
+%                 |                      |
+%                 |                      |
+%      to_do ---> |                      | ---> to_do
+%                 |                      |
+%                 |                      |
+%                 ------------------------
+%                    ^              v
+%                    |              |
+%                    ^              v
+%                 arrived         goal_pos
+
+% Local Goals
+assign(goal_pos,Coords,T) <-
+   arrived(T) &
+   was(to_do,[goto(Loc)|_],_,T) &
+   at(Loc,Coords).
+
+%assign(goal_pos,stop,T) <-
+%   arrived(T) &
+%   was(to_do,[],_,T).
+
+assign(to_do,R,T) <-
+   arrived(T) &
+   was(to_do,[_|R],_,T).
+
+at(mail,(10,10)) <- true.
+at(o103,(50,10)) <- true.
+at(o109,(100,10)) <- true.
+at(storage,(100,50)) <- true.
+
+assign(to_do,[goto(mail),goto(o109),goto(storage),goto(o109),goto(o103)],0) <- true.
+arrived(1) <- true.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ENVIRONMENT MODULE
+%
+
+% INPUT commands
+% steer(D,T) means steer Dwards at time T. D in {left,right,straight}.
+
+
+
+% OUTPUT percepts
+% current_pos(C,T) is true if the robot is at coordinates C at time T
+% compass(D,T) the robot is pointing in direction D at time T
+% whisker_sensor(on,T) the sensor of the robot is on at time T
+
+%===================================================================
+
+assign(robot_pos,(0,5),0) <- true.
+assign(compass,90,0) <- true.
+
+robot_pos(C,T) <- val(robot_pos,C,T).
+
+
+whisker_sensor(on,T) <-
+    val(compass,D,T) &
+    val(robot_pos,(X,Y),T) &
+    seeblock(X,Y,12,D-30).
+
+
+% compass((C+DC+360) mod 360,T+DT) <-
+assign(compass,C,T) <-
+   was(compass,C1,T1,T) &
+   compass_deriv(DC,T1) &
+   C is integer(C1+DC*(T-T1)+360) mod 360.
+
+% if robot is steering left, DC/DT=10 (i.e., 10 degrees per second).
+compass_deriv(18,T) <-
+   steer(left,T).
+
+
+% if robot is steering right, DC/DT=-10 (i.e., -10 degrees per second).
+compass_deriv(-18,T) <-
+   steer(right,T).
+
+% if robot is not steering left or right, DC/DT=0 
+%  that is, it is steering straight or not steering at all.
+compass_deriv(0,T) <-
+   ~ steer(left,T) &
+   ~ steer(right,T).
+
+
+assign(robot_pos,(X,Y),T) <-
+   was(robot_pos,(X1,Y1),T1,T) &
+   DT is T-T1 &
+   x_deriv(DX,T1) &
+   y_deriv(DY,T1) &
+   X is X1+DX*DT &
+   Y is Y1+DY*DT.
+
+x_deriv(DX,T) <-
+   val(compass,D,T) &
+   DX is cos(D*3.14159265358979344/180).
+
+y_deriv(DY,T) <-
+   val(compass,D,T) &
+   DY is sin(D*3.14159265358979344/180).
+
+% seeblock(X,Y,Dist,Dir) is true if the robot can see a blockage
+% from point (X,Y) at distance Dist in direction Dir
+seeblock(X,Y,Dist,Dir) <-
+   hits_barrier((X,Y),(X+Dist*cos(Dir*3.14159265358979344/180),
+           Y+Dist*sin(Dir*3.14159265358979344/180))).
+
+% hits_barrier(P0,P1) is true if the line between
+% P0 and P1 intersects a barrier
+hits_barrier(P0,P1) <-
+   vbarrier(XB,Y0,Y1) &
+   hits_vbarrier(P0,P1,XB,Y0,Y1).
+hits_barrier(P0,P1) <-
+   vbarrier(XB,Y0,Y1) &
+   hits_vbarrier(P1,P0,XB,Y0,Y1).
+
+% hits_vbarrier(St,End,XB,YL,YU) is true if point
+% St is to left of point End and intersects
+% vertical barrier from (XB,YL) up to (XB,YU)
+hits_vbarrier((X0,Y0),(X1,Y1),XB,YL,YU) <- 
+   X0 =< XB &
+   XB < X1 &
+   Int is (Y0*(X1-XB)+Y1*(XB-X0))/(X1-X0) &
+   Int < YU &
+   YL < Int.
+
+% vbarrier(X,Y0,Y1) true is there is a vertical
+% barrier from (XB,Y0) to (XB,Y1) where Y0<Y1
+vbarrier(20,-5,30) <- true.
+vbarrier(60,0,20) <- true.
+
+% init animation
+
+init_background :- animate(create,[background,0,1]),
+                   <-(vbarrier(X,Y1,Y2),true),
+  animate(addshape,[background,[barrier,polygon,[[(X,Y1),(X,Y2)],false,black]]]),
+                   fail.
+init_background.
+
+init_goals :- <-(at(Name,(X,Y)),true),
+                      animate(create,[Name,1,1]),
+ animate(addshape,[Name,[box,polygon,[[(-2,-2),(2,-2),(2,2),(-2,2)],true,blue]]]),
+ animate(addshape,[Name,[title,text,[Name,[geneva,plain,2.2],red,-2,-2]]]),
+                      animate(move,[Name,X,Y]),fail.
+init_goals.
+
+init_robot :- animate(create,[robot,2,1]),
+ animate(addshape,[robot,[axle,polygon,[[(-2,0),(2,0)],false,black]]]),
+ animate(addshape,[robot,[body,polygon,[[(-1,-2),(1,-2),(1,1),(-1,1)],true,gray]]]),
+ animate(addshape,[robot,[ltire,polygon,[[(-2,-1),(-2,1)],false,black]]]),
+ animate(addshape,[robot,[rtire,polygon,[[(2,-1),(2,1)],false,black]]]),
+ animate(addshape,[robot,[whisker,polygon,[[(-1,-2),(-2,-3)],false,black]]]), 
+ <-(assign(robot_pos,(X,Y),T),true),
+ <-(assign(compass,R,T),true),
+ animate(move,[robot,X,Y]),
+ animate(rotate,[robot,-(1.570796327+R*3.14159265358979344/180)]),
+ animate(path,[robot,-1,0,gray]).
+
+init_all :- animate(init,[4]),init_background,init_goals,init_robot.
+
+robot_sim(T0,T2,DT) :- clear,init_all,sim(T0,T2,DT).

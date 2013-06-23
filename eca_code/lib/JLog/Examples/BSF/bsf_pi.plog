@@ -1,0 +1,1 @@
+bsf_create(PI, 'piiterator', [50]), bsf_invoke(_, PI, 'calcPi', []).

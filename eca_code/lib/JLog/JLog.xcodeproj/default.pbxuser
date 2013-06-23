@@ -1,0 +1,167 @@
+// !$*UTF8*$!
+{
+	00E6828EFEC88D1A11DB9C8B = {
+		activeBuildStyle = 01D734240074A2FD7F000001;
+		activeTarget = 111A34F8FEF0B56C11DB9C8B;
+		addToTargets = (
+			111A34F8FEF0B56C11DB9C8B,
+		);
+		breakpoints = (
+		);
+		perUserDictionary = {
+			PBXWorkspaceConfiguration = {
+				ContentSize = "{898, 570}";
+				LeftSlideOut = {
+					ActiveTab = 0;
+					Frame = "{{0, 23}, {898, 547}}";
+					Split0 = {
+						Frame = "{{309, 0}, {589, 547}}";
+						Split0 = {
+							Frame = "{{0, 24}, {589, 523}}";
+						};
+						SplitCount = 1;
+						Tab0 = {
+							Debugger = {
+								Frame = "{{0, 0}, {484, 208}}";
+								Split0 = {
+									Frame = "{{0, 25}, {484, 183}}";
+									Split0 = {
+										Frame = "{{0, 0}, {236, 183}}";
+									};
+									Split1 = {
+										Frame = "{{245, 0}, {239, 183}}";
+									};
+									SplitCount = 2;
+								};
+								SplitCount = 1;
+								Tab0 = {
+									Frame = "{{0, 0}, {100, 50}}";
+								};
+								Tab1 = {
+									Frame = "{{0, 0}, {100, 50}}";
+								};
+								TabCount = 2;
+							};
+							Frame = "{{0, 0}, {484, 208}}";
+							LauncherConfigVersion = 4;
+						};
+						Tab1 = {
+							Frame = "{{0, 0}, {702, 208}}";
+							LauncherConfigVersion = 3;
+							Runner = {
+								Frame = "{{0, 0}, {702, 208}}";
+							};
+						};
+						Tab2 = {
+							BuildMessageFrame = "{{0, 0}, {591, 154}}";
+							BuildTranscriptFrame = "{{0, 163}, {591, 84}}";
+							Frame = "{{0, 0}, {589, 245}}";
+						};
+						Tab3 = {
+							Frame = "{{0, 0}, {560, 295}}";
+						};
+						TabCount = 4;
+					};
+					SplitCount = 1;
+					Tab0 = {
+						Frame = "{{0, 0}, {285, 547}}";
+					};
+					Tab1 = {
+						ClassesFrame = "{{0, 0}, {306, 329}}";
+						Frame = "{{0, 0}, {304, 545}}";
+						MembersFrame = "{{0, 338}, {306, 207}}";
+						OptionsSetName = "Hierarchy, project classes";
+					};
+					Tab2 = {
+						Frame = "{{0, 0}, {200, 100}}";
+					};
+					Tab3 = {
+						Frame = "{{0, 0}, {200, 547}}";
+						Split0 = {
+							Frame = "{{0, 0}, {200, 265}}";
+						};
+						Split1 = {
+							Frame = "{{0, 274}, {200, 273}}";
+						};
+						SplitCount = 2;
+					};
+					Tab4 = {
+						Frame = "{{0, 0}, {250, 100}}";
+					};
+					TabCount = 5;
+				};
+			};
+		};
+		wantsIndex = 1;
+		wantsSCM = -1;
+	};
+	0153C660FFDC2E26C0A80164 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{60, 239}, {750, 502}}";
+		};
+	};
+	06D0585AFF25023011DB9C8B = {
+		activeArgIndex = 0;
+		argumentStrings = (
+			JLog.html,
+		);
+		debuggerPlugin = JavaDebugging;
+		dylibVariantSuffix = _profile;
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		isa = PBXExecutable;
+		launchableReference = 06D0585BFF25023011DB9C8B;
+		shlibInfoDictList = (
+		);
+		sourceDirectories = (
+		);
+	};
+	06D0585BFF25023011DB9C8B = {
+		isa = PBXExecutableFileReference;
+		name = appletviewer;
+		path = /usr/bin/appletviewer;
+		refType = 0;
+	};
+	111A34F8FEF0B56C11DB9C8B = {
+		activeExec = 1;
+		customExecs = {
+			macosx = (
+				06D0585AFF25023011DB9C8B,
+			);
+		};
+		targetExecs = {
+			macosx = (
+				111A34FFFEF0B56C11DB9C8B,
+			);
+		};
+	};
+	111A34FFFEF0B56C11DB9C8B = {
+		activeArgIndex = 2147483647;
+		argumentStrings = (
+		);
+		debuggerPlugin = GDBDebugging;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		execLocation = 111A3500FEF0B56C11DB9C8B;
+		isa = PBXExecutable;
+		shlibInfoDictList = (
+		);
+		sourceDirectories = (
+		);
+	};
+	111A3500FEF0B56C11DB9C8B = {
+		isa = PBXFileSystemLocation;
+		partSpecifier = 3;
+		path = "";
+		productSpecifier = 0;
+		target = 111A34F8FEF0B56C11DB9C8B;
+	};
+	F6EAA08D01039EC401000001 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{15, 239}, {750, 502}}";
+		};
+	};
+}

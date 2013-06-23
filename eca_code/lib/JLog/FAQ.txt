@@ -1,0 +1,65 @@
+This is an interim FAQ (Frequently Asked Questions) document for JLog.  Its contents may be used to supplement, or improve the standard HTML JavaDoc documentation later on.
+
+QUESTIONS:
+
+Q: How should I add new predicates to JLog?
+Q: Can I compile JLog in J#?
+Q: How do I translate between lists of character codes and String objects?
+
+ANSWERS:
+
+Q: How should I add new predicates to JLog?
+
+A: The following steps should help.  
+
+The following was updated for JLog 1.3.x
+
+In most cases, new predicates should go into their own library with other related predicates. These libraries typically consist of a package in the Extras directory.
+
+ISO Prolog predicates / functions / operators, or those which should be available by default, can go into the Builtins package for the builtins library.
+
+In either case, the process is much the same.  Each library is made from a single package.
+
+If the predicate will be composed from existing predicates, then add a subclass of jPredefined to your package, then create the rules and add them to the database, in the register method of your subclass.  Create a rule by creating a jBuiltinRule from existing jPredicate subclasses.  See any member function of jPredefinedBuiltins that returns a jBuiltinRule for an example.
+
+Otherwise, you will add the functionality of the predicate directly into your package as Java classes.  The first step is to create the jBuiltinPredicate subclass for your predicate (note there are five subclasses of jBuiltinPredicate designed to subclass unary, binary, ternary, quad, and N-ary predicates).
+
+If your predicate does not make any choice points (i.e., it always fails on the retry), then the j*BuiltinPredicateGoal goals associated with the j*BuiltinPredicate class are likely suitable.  In this case you only need to implement your prove(j*BuiltinPredicateGoal) method.  
+
+Otherwise, you will need to define the addGoals member functions inherited from the iPredicate abstract class, and subclass jGoal to do what you want your predicate to do.  This subclass should still call your method for the prove (to keep the logic for your predicate as contained to one class as possible), but must also determine whether to retry (possibly by calling your instance) and will perform any needed proof / goal stack manipulation (e.g. cleanup for next attempt).  Typically the jGoal subclass invokes a prove method in your jBuiltinPredicate class to perform the operation required to prove your predicate (it is also possible to do this in the jGoal, but it is nice to have the jBuiltinPredicate subclass complete -- i.e., one can see its behaviours in a single class).  Typically, the jGoal subclass contains the runtime instantiations of the predicate arguments and any other arguments required for the prove.
+
+Once these subclassses are done, you will need to create predicate entries for the parser and call/? predicates.  These entries are registered in a symbol table matching predicate name an arity, and constructing new instances of your predicate class when needed.  In most cases, the pGenericPredicateEntry is sufficient.  If your predicate entry must perform more complicated steps to construct a predicate instance (e.g., instantiating different subclasses depending on arity), then create a pPredicateEntry subclass.  The *PredicateEntry subclass must be registered before the your predicate can be used.  This is done via two mechanisms in the INIT_*LIB.TOC file.  This file is used to load classes. It is named after its library (* is the library name in upper-case), and located in the top level of the *Lib.jar file.  When a loaded class is a subclass of pPredicateEntry or pOperatorEntry, then an instance of that class is added to the registry automatically.  For pGeneric*Entry classes, these can be instantiated manually from entries in the INIT_*LIB.TOC file.  
+
+Libraries have the form nameLib.jar, where name is the name used to refer to the library (e.g., to load it), while 'Lib.jar' denotes it is a library package.  When a library is loaded, the INIT_nameLIB.TOC file is parsed (where name is the name of the library -- e.g., filesystemLib.jar has the INIT_FILESYSTEMLIB.TOC), and each command carried out.  The possible entries are:
+
+# line comment -- does nothing
+LoadClass: classname
+RegisterGenericPredicateEntry: "name" arity classname
+RegisterGenericOperatorEntry: "name" type priority allow_atom classname
+
+Where, classname is a fully qualified classname string (with package name), "name" is the name of the predicate or operator (the quotes are recommended, but not required), arity is a number, type is an operator type string (e.g., XF, XFY, FY), and allow_atom is a boolean (e.g., TRUE, FALSE) that determines if the operator name could also be an atom.  If a classname appears in a RegisterGeneric*Entry, it does not need to have a LoadClass (because it is loaded to make the entry).
+
+The library loaded will not register predicate entries or rules multiple times.  If the predicate does exist, it is registered or added.  If the predicate does exist, but is from the same library, then nothing is done.  However, if the predicate already exists from another library, and error exception is thrown.
+
+A good set of examples classes to explore would be those in the Extras.FileSystem package.
+
+-------
+
+Q: Can I compile JLog in J#?
+
+A: It should be possible to compile JLog 1.3.x in J# (which corresponds to the old Java 1.1).  JLog depends upon the InvocationHandler interface (in java.lang.reflect) at compile time, which is from Java 1.3 and not available in J#.  There is a replacement InvocationHandler interface (in the package ubc.cs.JLog.Applet) specified in the InvocationHandler.jsl file in Source/ubc/cs/JLog/Applet.  The Java compiler should not compile this file (otherwise a conflict between the two interfaces would result), but the J# should include this file for compilation.
+
+NOTE: Future releases of JLog may no longer be compatible with Java 1.1 (to benefit from the substantial improvements made in Java releases 1.2 and up).  This could mean that future versions of JLog would not compile in J# (unless J# adds the needed features).
+
+
+-------
+
+Q: How do I translate between lists of character codes and String objects?
+
+A: When using the jPrologAPI interface to embed the JLog Prolog into a Java program, the jTermTranslation class handles conversion between Prolog terms and Java objects.  The standard conversion involving Strings is from atoms (i.e., text in single quotes ''), not from character codes (i.e., text in double quotes "").  Since character codes are a list, the default conversion is to a Vector.  
+
+You can write a new iTermToObject object that converts a jListPair / jListNull of integers into a String, then register this with the jTermTranslation instance that jPrologAPI is using (e.g., prologAPI.getTranslation().RegisterTermToObjectConverter(String.class,c), where c is the instance of iTermToObject -- see jTermTranslation.setObjectDefaults for examples).  
+
+Another way is to use the atom_chars/2 to convert char code list terms into atoms, and then read the atom as a String.
+
+For creating a char code list term from a String, the simplest way is to enclose it in double quotes (""), and it will be parsed by JLog into a char code list term.  This requires that a jPrologServices instance is already associated with the jTermTranslation instance (the default for the one used by jPrologAPI).

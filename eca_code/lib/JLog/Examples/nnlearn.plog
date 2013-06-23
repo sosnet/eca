@@ -1,0 +1,484 @@
+% Computational Intelligence: a logical approach. 
+% Prolog Code from Appexdix B.
+% Copyright (c) 1998, Poole, Mackworth, Goebel and Oxford University Press.
+% Standard BUILT-INS (from App B)
+
+% notin(X,L)
+notin(_,[]).
+notin(A,[H|T]) :- \+ A = H, notin(A,T).
+
+% member(X,L) is true if X is a member of list L
+member(X,[X|_]).
+member(X,[_|L]) :- member(X,L).
+
+% subset(L1,L2) is true if L1 is a subset of list L2
+subset([],_).
+subset([A|B],L) :- member(A,L), subset(B,L).
+
+% append(A,B,R) is true if R is the list containing the 
+% elements of A followed by the elements of B
+append([],R,R).
+append([H|T],L,[H|R]) :- append(T,L,R).
+
+% nth(N,L,E) is true if E is the Nth element of list L
+% this requires N to be bound.
+nth(1,[E|_],E) :- !.
+nth(N,[_|R],E) :- N1 is N-1, nth(N1,R,E).
+
+% remove(E,L,R) is true if E is an element of L and R is the remaining
+% elements after E is removed.
+remove(E,[E|R],R).
+remove(E,[A|L],[A|R]) :- remove(E,L,R).
+
+% min(A,B,M) is true if M is the minimum of A and M
+min(A,B,A) :- A < B,!.
+min(A,B,B) :- A >= B.
+
+% insert(E,L,L1) inserts E into L producing L1 
+% E is not added it is already there.
+% this assumes that E and L are ground
+insert(X,[],[X]).
+insert(A,[A|R],[A|R]) :- !.
+insert(A,[B|R],[B|R1]) :-
+%   A \== B,
+   insert(A,R,R1).
+
+% writel(L) is true if L is a list of items 
+% to be written on a line.
+writel([]).
+writel([H|T]) :- write(H), writel(T).
+
+% writeln(L) is true if L is a list of items 
+% to be written on a line, followed by a newline.
+writeln(L) :- writel(L), nl.
+
+% Computational Intelligence: a logical approach. 
+% Prolog Code.
+% Neural-network learning algorithm (Section C.4)
+% Copyright (c) 1998, Poole, Mackworth, Goebel and Oxford University Press.
+
+% Neural-net style learning for parameterized logic
+% programs.  Given a set of examples, a parameterized
+% logic program and a measure of error for each
+% example, this program used back-propagation to tune
+% the parameters. Derivatives are estimated numerically.
+
+% nnlearn(N,DX,LC,Exs,P0,P1)
+% N is the number of iterations to do
+% DX is the increment to evaluate derivatives
+% LC is the learning constant for gradient descent
+% Exs is a list of all of the examples
+% P0 is the list of parameter settings before the learning
+% P1 is the list of parameter settings after the learning
+nnlearn(0,_,_,Exs,P0,P0) :-
+   total_error(Exs,P0,0,Err0),
+   writeln(['Error = ', Err0]).
+nnlearn(N,DX,LC,Exs,P0,P2) :-
+   update_parms(DX,LC,Exs,P0,P1),
+   N1 is N-1,!,
+   nnlearn(N1,DX,LC,Exs,P1,P2).
+
+% update_parms(DX,LC,Exs,P0,P1).
+% updates all of parameter in P0 to P1
+update_parms(DX,LC,Exs,P0,P1) :-
+   total_error(Exs,P0,0,Err0),
+   writeln(['Error = ', Err0]),
+   update_each(P0,P0,Err0,Exs,DX,LC,P1).
+
+% update_each(PR,P0,Err0,Exs,DX,LC,P1)
+% updates each parameter in PR.
+% P0 is the initial parameter setting with error Err0
+% Exs is a list of all of the examples
+% DX is the increment to evaluate derivatives
+% LC is the learning constant for gradient descent
+% P1 is the updated parameter settings
+update_each([],_,_,_,_,_,[]).
+update_each([val(P,V)|RPs],P0,Err0,Exs,DX,LC,
+                               [val(P,NV)|NPs]) :-
+   V1 is V+DX,
+   total_error(Exs,[val(P,V1)|P0],0,Nerr),
+   NV is V+LC*(Err0-Nerr)/DX,
+   update_each(RPs,P0,Err0,Exs,DX,LC,NPs).
+
+% total_error(Exs,P,Err0,Err1)
+% P is a list of parameter settings
+% Exs is a list of examples
+% Err1 is Err0 plus the sum of the errors on examples
+total_error([],_,Err,Err).
+total_error([Ex|Exs],P,PErr,TErr) :-
+   pprove(error(Ex,Err),P),!,
+   NErr is PErr+Err,
+   total_error(Exs,P,NErr,TErr).
+
+
+% `<-' is the object-level `if'
+:- op(1150, xfx, <- ).
+% `&' is the object level conjunction.
+:- op(950,xfy, &).
+
+% pprove(G,P) means prove G with parameter settings P.
+% P is a list of the value assignments of the
+% form val(P,V)
+
+pprove(true,_) :- !.
+pprove((A & B),P) :-
+   !,
+   pprove(A,P),
+   pprove(B,P).
+pprove((A is E),P) :-
+   !,
+   eval(E,A,P).
+pprove(H,P) :-
+   (H <- B),
+   pprove(B,P).
+
+% eval(E,V,P) true if expression E has value V
+% given parameter settings P
+eval((A+B),S,P) :-
+   !,
+   eval(A,VA,P),
+   eval(B,VB,P),
+   S is VA+VB.
+eval((A*B),S,P) :-
+   !,
+   eval(A,VA,P),
+   eval(B,VB,P),
+   S is VA*VB.
+eval((A-B),S,P) :-
+   !,
+   eval(A,VA,P),
+   eval(B,VB,P),
+   S is VA-VB.
+eval((A/B),S,P) :-
+   !,
+   eval(A,VA,P),
+   eval(B,VB,P),
+   S is VA/VB.
+eval(sigmoid(E),V,P) :-
+   !,
+   eval(E,EV,P),
+   V is 1/(1+exp(-EV)).
+eval(N,N,_) :-
+   number(N),!.
+eval(N,V,P) :-
+   member(val(N,V1),P),!,V=V1.
+      % it only sees the first value for the parameter
+eval(N,V,_) :-
+   writeln(['Arithmetic Error: ',V,' is ',N]),fail.
+
+% prop(Object,Attribute,Value) - here is the data
+prop(e1,reads,1) <- true. 
+prop(e1,author,1) <- true. 
+prop(e1,thread,1) <- true. 
+prop(e1,length,0) <- true. 
+
+prop(e2,reads,1) <- true. 
+prop(e2,author,0) <- true. 
+prop(e2,thread,1) <- true. 
+prop(e2,length,1) <- true. 
+
+prop(e3,reads,0) <- true. 
+prop(e3,author,0) <- true. 
+prop(e3,thread,0) <- true. 
+prop(e3,length,0) <- true. 
+
+prop(e4,reads,1) <- true. 
+prop(e4,author,1) <- true. 
+prop(e4,thread,0) <- true. 
+prop(e4,length,0) <- true. 
+
+prop(e5,reads,1) <- true. 
+prop(e5,author,1) <- true. 
+prop(e5,thread,1) <- true. 
+prop(e5,length,1) <- true. 
+
+prop(e6,reads,1) <- true. 
+prop(e6,author,1) <- true. 
+prop(e6,thread,0) <- true. 
+prop(e6,length,0) <- true. 
+
+prop(e7,reads,0) <- true. 
+prop(e7,author,0) <- true. 
+prop(e7,thread,0) <- true. 
+prop(e7,length,1) <- true. 
+
+prop(e8,reads,1) <- true. 
+prop(e8,author,0) <- true. 
+prop(e8,thread,1) <- true. 
+prop(e8,length,1) <- true. 
+
+prop(e9,reads,1) <- true. 
+prop(e9,author,1) <- true. 
+prop(e9,thread,0) <- true. 
+prop(e9,length,0) <- true. 
+
+prop(e10,reads,1) <- true. 
+prop(e10,author,1) <- true. 
+prop(e10,thread,1) <- true. 
+prop(e10,length,0) <- true. 
+
+prop(e11,reads,0) <- true. 
+prop(e11,author,0) <- true. 
+prop(e11,thread,0) <- true. 
+prop(e11,length,1) <- true. 
+
+prop(e12,reads,1) <- true. 
+prop(e12,author,1) <- true. 
+prop(e12,thread,1) <- true. 
+prop(e12,length,0) <- true. 
+
+prop(e13,reads,1) <- true. 
+prop(e13,author,1) <- true. 
+prop(e13,thread,0) <- true. 
+prop(e13,length,1) <- true. 
+
+prop(e14,reads,1) <- true. 
+prop(e14,author,1) <- true. 
+prop(e14,thread,1) <- true. 
+prop(e14,length,1) <- true. 
+
+
+predicted_prop(Obj,reads,V) <-
+   prop(Obj,h_1,I_1) &
+   prop(Obj,h_2,I_2) &
+   V is sigmoid(w_0+w_1* I_1+w_2* I_2).
+prop(Obj,h_1,V) <-
+   prop(Obj,author,I_1) &
+   prop(Obj,thread,I_2) &
+   prop(Obj,length,I_3) &
+   V is sigmoid(w_3+w_4* I_1+w_5* I_2+w_6* I_3).
+prop(Obj,h_2,V) <-
+   prop(Obj,author,I_1) &
+   prop(Obj,thread,I_2) &
+   prop(Obj,length,I_3) &
+   V is sigmoid(w_7+w_8* I_1+w_9* I_2+w_10* I_3).
+
+error(Obj,E) <-
+   predicted_prop(Obj,reads,VC) &
+   prop(Obj,reads,V) &
+   E is (VC-V)*(VC-V).
+
+%  Example Query:
+%?nnlearn(50,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.2),val(w_1,0.12),val(w_2,0.112),val(w_3,0.22),val(w_4,0.23),val(w_5,0.26),val(w_6,0.27),val(w_7,0.211),val(w_8,0.245),val(w_9,0.152),val(w_10,0.102)],P1).
+% [Error = ,2.8975108]
+% [Error = ,2.6894987]
+% [Error = ,2.5522327]
+% [Error = ,2.3694513]
+% [Error = ,2.256587]
+% [Error = ,2.2228935]
+% [Error = ,2.18179]
+% [Error = ,2.1311457]
+% [Error = ,2.0681047]
+% [Error = ,1.9901136]
+% [Error = ,1.8944507]
+% [Error = ,1.7798543]
+% [Error = ,1.6470317]
+% [Error = ,1.5005386]
+% [Error = ,1.3469839]
+% [Error = ,1.1946768]
+% [Error = ,1.048928]
+% [Error = ,0.9147282]
+% [Error = ,0.7930576]
+% [Error = ,0.6865766]
+% [Error = ,0.59359336]
+% [Error = ,0.51517]
+% [Error = ,0.44764414]
+% [Error = ,0.3910157]
+% [Error = ,0.34233922]
+% [Error = ,0.30192107]
+% [Error = ,0.26781133]
+% [Error = ,0.23962086]
+% [Error = ,0.21571797]
+% [Error = ,0.19543937]
+% [Error = ,0.17801069]
+% [Error = ,0.16295847]
+% [Error = ,0.14987276]
+% [Error = ,0.1384316]
+% [Error = ,0.12837052]
+% [Error = ,0.119478]
+% [Error = ,0.11157785]
+% [Error = ,0.1045264]
+% [Error = ,0.09820451]
+% [Error = ,0.09251217]
+% [Error = ,0.08736722]
+% [Error = ,0.08269922]
+% [Error = ,0.07844932]
+% [Error = ,0.074567474]
+% [Error = ,0.07101087]
+% [Error = ,0.06774258]
+% [Error = ,0.064730935]
+% [Error = ,0.06194881]
+% [Error = ,0.059372336]
+% [Error = ,0.05698088]
+% [Error = ,0.054755844]
+% P1 = [val(w_0,-3.4548004),val(w_1,4.0462494),val(w_2,3.887659),val(w_3,-1.4827193),val(w_4,2.972797),val(w_5,2.9442186),val(w_6,-0.25719413),val(w_7,-1.410302),val(w_8,2.9131591),val(w_9,2.8385847),val(w_10,-0.3055408)]
+% by JLog in around 6-7 hrs.
+%nnlearn(50,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.2),val(w_1,0.12),val(w_2,0.112),val(w_3,0.22),val(w_4,0.23),val(w_5,0.26),val(w_6,0.27),val(w_7,0.211),val(w_8,0.245),val(w_9,0.152),val(w_10,0.102)],P1)
+%[start,50]
+%[Error = ,2.8975108]
+%[end,nnlearn(49,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,1.5436556),val(w_1,1.074628),val(w_2,1.0229259),val(w_3,0.25387928),val(w_4,0.27785063),val(w_5,0.29573894),val(w_6,0.27913144),val(w_7,0.24468854),val(w_8,0.29137242),val(w_9,0.18773894),val(w_10,0.11213279)],_@57e5ef)]
+%[start,49]
+%[Error = ,2.6894987]
+% done.
+% nnlearn(50,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.2),val(w_1,0.12),val(w_2,0.112),val(w_3,0.22),val(w_4,0.23),val(w_5,0.26),val(w_6,0.27),val(w_7,0.211),val(w_8,0.245),val(w_9,0.152),val(w_10,0.102)],P1)
+%[start,50]
+%[Error = ,2.8975108]
+%[end,nnlearn(49,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,1.5436556),val(w_1,1.074628),val(w_2,1.0229259),val(w_3,0.25387928),val(w_4,0.27785063),val(w_5,0.29573894),val(w_6,0.27913144),val(w_7,0.24468854),val(w_8,0.29137242),val(w_9,0.18773894),val(w_10,0.11213279)],_@581857)]
+%[start,49]
+%[Error = ,2.6894987]
+%[end,nnlearn(48,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,1.2875702),val(w_1,0.92296994),val(w_2,0.87842035),val(w_3,0.18716976),val(w_4,0.28755426),val(w_5,0.30246234),val(w_6,0.23392728),val(w_7,0.179791),val(w_8,0.3009807),val(w_9,0.19462924),val(w_10,0.06762004)],_@581857)]
+%[start,48]
+%[Error = ,2.5522327]
+%[end,nnlearn(47,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.9653952),val(w_1,0.7448951),val(w_2,0.7093339),val(w_3,0.11259243),val(w_4,0.30789137),val(w_5,0.3169582),val(w_6,0.17987779),val(w_7,0.10802701),val(w_8,0.32105553),val(w_9,0.20938735),val(w_10,0.015239477)],_@581857)]
+%[start,47]
+%[Error = ,2.3694513]
+%[end,nnlearn(46,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.6487515),val(w_1,0.5992929),val(w_2,0.57198095),val(w_3,0.049554557),val(w_4,0.35190344),val(w_5,0.34924006),val(w_6,0.12632897),val(w_7,0.04870847),val(w_8,0.3643762),val(w_9,0.24205069),val(w_10,-0.03542447)],_@581857)]
+%[start,46]
+%[Error = ,2.256587]
+%[end,nnlearn(45,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.54039025),val(w_1,0.6207744),val(w_2,0.5943923),val(w_3,0.024687499),val(w_4,0.42810202),val(w_5,0.40615058),val(w_6,0.08939794),val(w_7,0.027632266),val(w_8,0.4394065),val(w_9,0.29941422),val(w_10,-0.06868386)],_@581857)]
+%[start,45]
+%[Error = ,2.2228935]
+%[end,nnlearn(44,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.47225022),val(w_1,0.6902019),val(w_2,0.66334295),val(w_3,0.0020377338),val(w_4,0.5120969),val(w_5,0.46902156),val(w_6,0.052276164),val(w_7,0.009440929),val(w_8,0.5224954),val(w_9,0.36311966),val(w_10,-0.1015141)],_@581857)]
+%[start,44]
+%[Error = ,2.18179]
+%[end,nnlearn(43,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.35890603),val(w_1,0.7493535),val(w_2,0.72309065),val(w_3,-0.032842904),val(w_4,0.5970931),val(w_5,0.532727),val(w_6,0.0073104203),val(w_7,-0.020075291),val(w_8,0.60699093),val(w_9,0.42808872),val(w_10,-0.14147305)],_@581857)]
+%[start,43]
+%[Error = ,2.1311457]
+%[end,nnlearn(42,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.24734998),val(w_1,0.8327762),val(w_2,0.8066087),val(w_3,-0.07304028),val(w_4,0.6884551),val(w_5,0.6015823),val(w_6,-0.041899174),val(w_7,-0.05404994),val(w_8,0.69806683),val(w_9,0.4985414),val(w_10,-0.18486524)],_@581857)]
+%[start,42]
+%[Error = ,2.0681047]
+%[end,nnlearn(41,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.10658765),val(w_1,0.9194652),val(w_2,0.89346457),val(w_3,-0.12508705),val(w_4,0.78360796),val(w_5,0.67396617),val(w_6,-0.0984759),val(w_7,-0.09908721),val(w_8,0.7931243),val(w_9,0.57278496),val(w_10,-0.23486161)],_@581857)]
+%[start,41]
+%[Error = ,1.9901136]
+%[end,nnlearn(40,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.040409327),val(w_1,1.0274092),val(w_2,1.000598),val(w_3,-0.18465593),val(w_4,0.8858299),val(w_5,0.7529781),val(w_6,-0.15941569),val(w_7,-0.1510863),val(w_8,0.89515555),val(w_9,0.6537042),val(w_10,-0.28847003)],_@581857)]
+%[start,40]
+%[Error = ,1.8944507]
+%[end,nnlearn(39,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.21159387),val(w_1,1.143829),val(w_2,1.115325),val(w_3,-0.2553828),val(w_4,0.9929633),val(w_5,0.8378432),val(w_6,-0.22535035),val(w_7,-0.21386191),val(w_8,1.001836),val(w_9,0.7403336),val(w_10,-0.34645343)],_@581857)]
+%[start,39]
+%[Error = ,1.7798543]
+%[end,nnlearn(38,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.38586593),val(w_1,1.2822071),val(w_2,1.2503772),val(w_3,-0.3305681),val(w_4,1.1072254),val(w_5,0.93147016),val(w_6,-0.29028365),val(w_7,-0.2812986),val(w_8,1.1151563),val(w_9,0.83535534),val(w_10,-0.40320897)],_@581857)]
+%[start,38]
+%[Error = ,1.6470317]
+%[end,nnlearn(37,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.57919955),val(w_1,1.4268914),val(w_2,1.3903408),val(w_3,-0.412298),val(w_4,1.2244797),val(w_5,1.0321782),val(w_6,-0.35260627),val(w_7,-0.35586402),val(w_8,1.230837),val(w_9,0.9368978),val(w_10,-0.45754457)],_@581857)]
+%[start,37]
+%[Error = ,1.5005386]
+%[end,nnlearn(36,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.7626865),val(w_1,1.5902439),val(w_2,1.5472918),val(w_3,-0.48890188),val(w_4,1.3460374),val(w_5,1.1425421),val(w_6,-0.40222117),val(w_7,-0.42668626),val(w_8,1.3500105),val(w_9,1.0473571),val(w_10,-0.49997115)],_@581857)]
+%[start,36]
+%[Error = ,1.3469839]
+%[end,nnlearn(35,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-0.9632442),val(w_1,1.7464081),val(w_2,1.696065),val(w_3,-0.56773496),val(w_4,1.4639115),val(w_5,1.2572811),val(w_6,-0.44177482),val(w_7,-0.5010371),val(w_8,1.4649044),val(w_9,1.1615834),val(w_10,-0.53339744)],_@581857)]
+%[start,35]
+%[Error = ,1.1946768]
+%[end,nnlearn(34,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.1344049),val(w_1,1.9163886),val(w_2,1.8577604),val(w_3,-0.63089204),val(w_4,1.5817618),val(w_5,1.3796375),val(w_6,-0.45922706),val(w_7,-0.5614524),val(w_8,1.5791785),val(w_9,1.2827954),val(w_10,-0.5460932)],_@581857)]
+%[start,34]
+%[Error = ,1.048928]
+%[end,nnlearn(33,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.3345335),val(w_1,2.0603576),val(w_2,1.9934683),val(w_3,-0.70351434),val(w_4,1.6879892),val(w_5,1.49806),val(w_6,-0.4730434),val(w_7,-0.6318574),val(w_8,1.6817461),val(w_9,1.3999066),val(w_10,-0.5558088)],_@581857)]
+%[start,33]
+%[Error = ,0.9147282]
+%[end,nnlearn(32,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.4762375),val(w_1,2.2243896),val(w_2,2.14909),val(w_3,-0.7484443),val(w_4,1.7946458),val(w_5,1.621686),val(w_6,-0.4605622),val(w_7,-0.67611384),val(w_8,1.7843496),val(w_9,1.5219173),val(w_10,-0.5404844)],_@581857)]
+%[start,32]
+%[Error = ,0.7930576]
+%[end,nnlearn(31,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.6766403),val(w_1,2.3424067),val(w_2,2.259448),val(w_3,-0.82315874),val(w_4,1.8833911),val(w_5,1.7292902),val(w_6,-0.46457955),val(w_7,-0.7492726),val(w_8,1.8695306),val(w_9,1.6282997),val(w_10,-0.5412891)],_@581857)]
+%[start,31]
+%[Error = ,0.6865766]
+%[end,nnlearn(30,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.7750177),val(w_1,2.4994888),val(w_2,2.4090497),val(w_3,-0.84756684),val(w_4,1.9785857),val(w_5,1.8446789),val(w_6,-0.43224403),val(w_7,-0.774086),val(w_8,1.9606661),val(w_9,1.74224),val(w_10,-0.50719523)],_@581857)]
+%[start,30]
+%[Error = ,0.59359336]
+%[end,nnlearn(29,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-1.9755754),val(w_1,2.5878408),val(w_2,2.491042),val(w_3,-0.930459),val(w_4,2.0496523),val(w_5,1.9320295),val(w_6,-0.4412801),val(w_7,-0.85532117),val(w_8,2.028657),val(w_9,1.8288813),val(w_10,-0.51322126)],_@581857)]
+%[start,29]
+%[Error = ,0.51517]
+%[end,nnlearn(28,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.0316396),val(w_1,2.7359881),val(w_2,2.6329844),val(w_3,-0.935585),val(w_4,2.1343863),val(w_5,2.0343766),val(w_6,-0.39839455),val(w_7,-0.86149025),val(w_8,2.109594),val(w_9,1.9301376),val(w_10,-0.46923304)],_@581857)]
+%[start,28]
+%[Error = ,0.44764414]
+%[end,nnlearn(27,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.218506),val(w_1,2.802781),val(w_2,2.6946812),val(w_3,-1.019705),val(w_4,2.191413),val(w_5,2.1025076),val(w_6,-0.41292915),val(w_7,-0.94398904),val(w_8,2.1641026),val(w_9,1.9979439),val(w_10,-0.4810109)],_@581857)]
+%[start,27]
+%[Error = ,0.3910157]
+%[end,nnlearn(26,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.2592964),val(w_1,2.9307404),val(w_2,2.8176932),val(w_3,-1.0199524),val(w_4,2.2637105),val(w_5,2.187924),val(w_6,-0.37283906),val(w_7,-0.9453242),val(w_8,2.2331157),val(w_9,2.082645),val(w_10,-0.4400506)],_@581857)]
+%[start,26]
+%[Error = ,0.34233922]
+%[end,nnlearn(25,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.4064543),val(w_1,2.992464),val(w_2,2.875307),val(w_3,-1.0873563),val(w_4,2.3127472),val(w_5,2.2443905),val(w_6,-0.38202116),val(w_7,-1.011691),val(w_8,2.2799678),val(w_9,2.1389446),val(w_10,-0.4470631)],_@581857)]
+%[start,25]
+%[Error = ,0.30192107]
+%[end,nnlearn(24,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.4593863),val(w_1,3.0906596),val(w_2,2.9696107),val(w_3,-1.0989017),val(w_4,2.370516),val(w_5,2.310653),val(w_6,-0.35615274),val(w_7,-1.0238503),val(w_8,2.335147),val(w_9,2.2048464),val(w_10,-0.42019928)],_@581857)]
+%[start,24]
+%[Error = ,0.26781133]
+%[end,nnlearn(23,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.5593104),val(w_1,3.1551905),val(w_2,3.030774),val(w_3,-1.1419721),val(w_4,2.4153686),val(w_5,2.360849),val(w_6,-0.35463282),val(w_7,-1.0665839),val(w_8,2.3780236),val(w_9,2.2549262),val(w_10,-0.4171505)],_@581857)]
+%[start,23]
+%[Error = ,0.23962086]
+%[end,nnlearn(22,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.6230829),val(w_1,3.2289944),val(w_2,3.1014862),val(w_3,-1.1639318),val(w_4,2.4612105),val(w_5,2.4118376),val(w_6,-0.34139314),val(w_7,-1.0887717),val(w_8,2.4218524),val(w_9,2.305766),val(w_10,-0.40283346)],_@581857)]
+%[start,22]
+%[Error = ,0.21571797]
+%[end,nnlearn(21,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.6940928),val(w_1,3.2912872),val(w_2,3.1610074),val(w_3,-1.1921338),val(w_4,2.5016105),val(w_5,2.4560702),val(w_6,-0.3347204),val(w_7,-1.1170034),val(w_8,2.4605),val(w_9,2.3499184),val(w_10,-0.39504164)],_@581857)]
+%[start,21]
+%[Error = ,0.19543937]
+%[end,nnlearn(20,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.7552187),val(w_1,3.3514893),val(w_2,3.2186868),val(w_3,-1.2153633),val(w_4,2.539817),val(w_5,2.4975207),val(w_6,-0.32677957),val(w_7,-1.1403491),val(w_8,2.497072),val(w_9,2.391317),val(w_10,-0.38610244)],_@581857)]
+%[start,20]
+%[Error = ,0.17801069]
+%[end,nnlearn(19,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.8131247),val(w_1,3.4070349),val(w_2,3.2719226),val(w_3,-1.2377418),val(w_4,2.5751538),val(w_5,2.5354724),val(w_6,-0.3201262),val(w_7,-1.1628485),val(w_8,2.530908),val(w_9,2.4292345),val(w_10,-0.37851924)],_@581857)]
+%[start,19]
+%[Error = ,0.16295847]
+%[end,nnlearn(18,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.8667078),val(w_1,3.4591308),val(w_2,3.3218966),val(w_3,-1.2583948),val(w_4,2.608157),val(w_5,2.5706198),val(w_6,-0.31396756),val(w_7,-1.1836356),val(w_8,2.5625284),val(w_9,2.464367),val(w_10,-0.37150377)],_@581857)]
+%[start,18]
+%[Error = ,0.14987276]
+%[end,nnlearn(17,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.9167354),val(w_1,3.5079648),val(w_2,3.368786),val(w_3,-1.2776873),val(w_4,2.6390188),val(w_5,2.6032355),val(w_6,-0.30837664),val(w_7,-1.2030667),val(w_8,2.5921102),val(w_9,2.4969826),val(w_10,-0.36510968)],_@581857)]
+%[start,17]
+%[Error = ,0.1384316]
+%[end,nnlearn(16,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-2.963549),val(w_1,3.553893),val(w_2,3.412916),val(w_3,-1.2957282),val(w_4,2.6679597),val(w_5,2.6336174),val(w_6,-0.30326107),val(w_7,-1.2212431),val(w_8,2.6198711),val(w_9,2.527375),val(w_10,-0.35924459)],_@581857)]
+%[start,16]
+%[Error = ,0.12837052]
+%[end,nnlearn(15,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.0074909),val(w_1,3.5971735),val(w_2,3.454526),val(w_3,-1.312647),val(w_4,2.6951618),val(w_5,2.6620026),val(w_6,-0.29856572),val(w_7,-1.238308),val(w_8,2.645972),val(w_9,2.5557766),val(w_10,-0.35385484)],_@581857)]
+%[start,15]
+%[Error = ,0.119478]
+%[end,nnlearn(14,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.0488372),val(w_1,3.6380637),val(w_2,3.4938612),val(w_3,-1.3285518),val(w_4,2.7207956),val(w_5,2.6886048),val(w_6,-0.29425183),val(w_7,-1.2543505),val(w_8,2.6705806),val(w_9,2.5824041),val(w_10,-0.34888157)],_@581857)]
+%[start,14]
+%[Error = ,0.11157785]
+%[end,nnlearn(13,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.087859),val(w_1,3.676774),val(w_2,3.531114),val(w_3,-1.3435394),val(w_4,2.7449996),val(w_5,2.7136037),val(w_6,-0.29027322),val(w_7,-1.2694798),val(w_8,2.693825),val(w_9,2.6074336),val(w_10,-0.34428605)],_@581857)]
+%[start,13]
+%[Error = ,0.1045264]
+%[end,nnlearn(12,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.1247563),val(w_1,3.7134972),val(w_2,3.566476),val(w_3,-1.3576851),val(w_4,2.7679064),val(w_5,2.7371616),val(w_6,-0.28658965),val(w_7,-1.2837692),val(w_8,2.7158341),val(w_9,2.6310244),val(w_10,-0.34002134)],_@581857)]
+%[start,12]
+%[Error = ,0.09820451]
+%[end,nnlearn(11,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.1597211),val(w_1,3.7484128),val(w_2,3.6001132),val(w_3,-1.3710663),val(w_4,2.7896302),val(w_5,2.7594159),val(w_6,-0.2831691),val(w_7,-1.2972876),val(w_8,2.7367203),val(w_9,2.6533144),val(w_10,-0.33605242)],_@581857)]
+%[start,11]
+%[Error = ,0.09251217]
+%[end,nnlearn(10,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.1929493),val(w_1,3.781653),val(w_2,3.6321528),val(w_3,-1.3837628),val(w_4,2.8102674),val(w_5,2.7804787),val(w_6,-0.27999216),val(w_7,-1.3101205),val(w_8,2.7565672),val(w_9,2.6744175),val(w_10,-0.33235693)],_@581857)]
+%[start,10]
+%[Error = ,0.08736722]
+%[end,nnlearn(9,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.2245622),val(w_1,3.8133693),val(w_2,3.6627352),val(w_3,-1.3958104),val(w_4,2.829916),val(w_5,2.8004687),val(w_6,-0.27702087),val(w_7,-1.3223059),val(w_8,2.7754693),val(w_9,2.694446),val(w_10,-0.32889614)],_@581857)]
+%[start,9]
+%[Error = ,0.08269922]
+%[end,nnlearn(8,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.2547088),val(w_1,3.8436723),val(w_2,3.6919692),val(w_3,-1.4072813),val(w_4,2.8486466),val(w_5,2.8194714),val(w_6,-0.27424777),val(w_7,-1.3339057),val(w_8,2.7934983),val(w_9,2.7134905),val(w_10,-0.3256544)],_@581857)]
+%[start,8]
+%[Error = ,0.07844932]
+%[end,nnlearn(7,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.2835052),val(w_1,3.872673),val(w_2,3.7199557),val(w_3,-1.4182143),val(w_4,2.8665347),val(w_5,2.837568),val(w_6,-0.27165124),val(w_7,-1.3449706),val(w_8,2.810718),val(w_9,2.7316296),val(w_10,-0.32261157)],_@581857)]
+%[start,7]
+%[Error = ,0.074567474]
+%[end,nnlearn(6,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.311056),val(w_1,3.9004653),val(w_2,3.7467859),val(w_3,-1.4286504),val(w_4,2.883642),val(w_5,2.854837),val(w_6,-0.26920894),val(w_7,-1.3555362),val(w_8,2.8271928),val(w_9,2.748941),val(w_10,-0.31974682)],_@581857)]
+%[start,6]
+%[Error = ,0.07101087]
+%[end,nnlearn(5,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.3374467),val(w_1,3.9271429),val(w_2,3.772547),val(w_3,-1.4386275),val(w_4,2.9000301),val(w_5,2.87134),val(w_6,-0.26691043),val(w_7,-1.365634),val(w_8,2.8429842),val(w_9,2.7654886),val(w_10,-0.317043)],_@581857)]
+%[start,5]
+%[Error = ,0.06774258]
+%[end,nnlearn(4,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.3627727),val(w_1,3.952781),val(w_2,3.7973106),val(w_3,-1.4481791),val(w_4,2.915751),val(w_5,2.887136),val(w_6,-0.26474604),val(w_7,-1.3753085),val(w_8,2.8581328),val(w_9,2.7813287),val(w_10,-0.3144897)],_@581857)]
+%[start,4]
+%[Error = ,0.064730935]
+%[end,nnlearn(3,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.3871078),val(w_1,3.9774446),val(w_2,3.8211443),val(w_3,-1.4573388),val(w_4,2.930845),val(w_5,2.9022777),val(w_6,-0.2627001),val(w_7,-1.384586),val(w_8,2.8726869),val(w_9,2.7965138),val(w_10,-0.31207347)],_@581857)]
+%[start,3]
+%[Error = ,0.06194881]
+%[end,nnlearn(2,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.410515),val(w_1,4.001208),val(w_2,3.8441107),val(w_3,-1.4661354),val(w_4,2.9453576),val(w_5,2.9168098),val(w_6,-0.26076669),val(w_7,-1.393498),val(w_8,2.886685),val(w_9,2.8110876),val(w_10,-0.3097865)],_@581857)]
+%[start,2]
+%[Error = ,0.059372336]
+%[end,nnlearn(1,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.433062),val(w_1,4.0241227),val(w_2,3.8662643),val(w_3,-1.4745896),val(w_4,2.959329),val(w_5,2.9307764),val(w_6,-0.25893533),val(w_7,-1.4020654),val(w_8,2.9001627),val(w_9,2.8250968),val(w_10,-0.3076139)],_@581857)]
+%[start,1]
+%[Error = ,0.05698088]
+%[end,nnlearn(0,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-3.4548004),val(w_1,4.0462494),val(w_2,3.887659),val(w_3,-1.4827193),val(w_4,2.972797),val(w_5,2.9442186),val(w_6,-0.25719413),val(w_7,-1.410302),val(w_8,2.9131591),val(w_9,2.8385847),val(w_10,-0.3055408)],_@581857)]
+%[Error = ,0.054755844]
+%P1 = [val(w_0,-3.4548004),val(w_1,4.0462494),val(w_2,3.887659),val(w_3,-1.4827193),val(w_4,2.972797),val(w_5,2.9442186),val(w_6,-0.25719413),val(w_7,-1.410302),val(w_8,2.9131591),val(w_9,2.8385847),val(w_10,-0.3055408)]
+% by JLog in 1h 24min 40sec
+%?nnlearn(2,0.01,1.0,[e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,0.2),val(w_1,0.12),val(w_2,0.112),val(w_3,0.22),val(w_4,0.23),val(w_5,0.26),val(w_6,0.27),val(w_7,0.211),val(w_8,0.245),val(w_9,0.152),val(w_10,0.102)],P1).
+%[Error = ,2.8975108], [Error = ,2.6894987], [Error = ,2.5522327] and 
+% P1 = [val(w_0,1.2875702),val(w_1,0.92296994),val(w_2,0.87842035),val(w_3,0.18716976),val(w_4,0.28755426),val(w_5,0.30246234),val(w_6,0.23392728),val(w_7,0.179791),val(w_8,0.3009807),val(w_9,0.19462924),val(w_10,0.06762004)]
+% and 3.24.89 in JLog
+% Error = 2.8975108330165593, Error = 2.689495856698472 in PJ with 2.20.00.00 before  ***Query manually stopped***
+
+% The following demonstrates a parameter setting with low error
+%?total_error([e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14],[val(w_0,-300),val(w_1,300),val(w_2,300),val(w_3,-30),val(w_4,300),val(w_5,300),val(w_6,-0.25),val(w_7,-30),val(w_8,300),val(w_9,300),val(w_10,-0.3)],0,E).

@@ -1,0 +1,465 @@
+<?xml version="1.0" ?>
+
+<!--
+   Ant buildfile for JLog
+   
+   Original version by Ulf Dittmer
+   Modification and maintenance by Glendon Holst
+   
+   NOTE: This is not the primary build mechanism for JLog (yet)
+  -->
+
+<project name="JLog" default="info" basedir=".">
+
+	<description>
+		Builds the JLog Prolog-in-Java system.
+		Its home is at http://sourceforge.net/projects/jlogic/
+	</description>
+
+  <!-- =================================================================== -->
+  <!-- properties														   -->
+  <!-- =================================================================== -->
+
+	<property environment="env" />
+
+	<property name="name"			value="JLog" />
+	<property name="version"		value="1.3.4" />
+	<property name="srcDir"			value="Source" />
+	<property name="examplesDir"	value="Examples" />
+	<property name="helpDir"		value="Help" />
+	<property name="libDir"			value="lib" />
+	<property name="buildDir"		value="build" />
+	<property name="classDir"		value="${buildDir}/JLog.build/JLog.build/JavaClasses" />
+	<property name="installDir"		value="JLog" />
+	<property name="docDir"			value="Documentation" />
+
+	<property name="jar_jlogic"		value="${buildDir}/jlogic.jar" />
+	<property name="jar_builtins"	value="${buildDir}/builtinsLib.jar" />
+	<property name="jar_JLog"		value="${buildDir}/JLog.jar" />
+
+	<property name="jar_Animation"	value="${buildDir}/animationLib.jar" />
+	<property name="jar_Database"	value="${buildDir}/databaseLib.jar" />
+	<property name="jar_Filesystem"	value="${buildDir}/filesystemLib.jar" />
+	<property name="jar_BSF"		value="${buildDir}/bsfLib.jar" />
+
+	<property name="bsfLib"			value="bsf.jar" />
+	<available file="${libDir}/${bsfLib}"		property="bsf.jar.exists" />
+
+	<property name="junitLib"			value="junit.jar" />
+	<available file="${libDir}/${junitLib}"		property="junit.jar.exists" />
+
+	<property name="jar_example_APIQueens"	value="${buildDir}/APIQueens.jar" />
+	<property name="jar_example_BSFScriptedUI"	value="${buildDir}/BSFScriptedUI.jar" />
+
+
+<!-- =================================================================== -->
+<!-- Define the basic classpath                                          -->
+<!-- =================================================================== -->
+  
+  <path id="basic.class.path">
+
+	<fileset dir="${classDir}">
+		<include name="**/*.class"/>
+	</fileset>
+
+    <pathelement location="${libDir}/${bsfLib}" />
+
+  </path>
+  
+
+<!-- =================================================================== -->
+<!-- Init Target														 -->
+<!-- =================================================================== -->
+  
+  <target name="init">
+  
+    <tstamp/>
+
+    <mkdir dir="${buildDir}" />
+    <mkdir dir="${classDir}" />
+  
+  </target>
+  
+  
+<!-- =================================================================== -->
+<!-- Compile the framework, extras, examples, and tests                  -->
+<!-- =================================================================== -->
+
+  <target name="compile" depends="init,compile_main,compile_extras,compile_examples" 
+		description="compiles all source files, including Extras and Examples">
+
+  </target>
+
+  <target name="compile_main" depends="init" 
+		description="compile main source files">
+  
+    <javac srcdir="${srcDir}"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="**/*.java"
+			excludes="**/JLog/Extras/**/*.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+  <target name="compile_extras" depends="compile_extras_db,compile_extras_fs,compile_extras_bsf" 
+		description="compile extras source files">
+  
+  </target>
+
+  <target name="compile_extras_db" depends="compile_main">
+  
+    <javac srcdir="${srcDir}"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="**/JLog/Extras/DataBase/*.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+  <target name="compile_extras_fs" depends="compile_main">
+  
+    <javac srcdir="${srcDir}"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="**/JLog/Extras/FileSystem/*.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+  <target name="compile_extras_bsf" depends="compile_main" if="bsf.jar.exists">
+  
+    <javac srcdir="${srcDir}"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="**/JLog/Extras/BSF/**/*.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+
+  <target name="compile_examples" depends="compile_main,compile_example_api,compile_example_bsf">
+
+  </target>
+
+  <target name="compile_example_api" depends="compile_main" 
+		description="compile API example files">
+  
+    <javac srcdir="${examplesDir}/API"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="*.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+  <target name="compile_example_bsf" depends="compile_extras_bsf" if="bsf.jar.exists"  
+		description="compile BSF example files">
+  
+    <javac srcdir="${examplesDir}/BSF"
+			destdir="${classDir}"
+			classpathref="basic.class.path"
+			includes="ScriptedUI.java"
+			compiler="modern"
+			nowarn="off"
+			target="1.2"
+			debug="off"
+			optimize="on"
+			deprecation="on">
+    </javac>
+
+  </target>
+
+
+<!-- =================================================================== -->
+<!-- Jar the framework, extras, examples, tests                          -->
+<!-- =================================================================== -->
+
+  <target name="build" depends="compile,build_main,build_extras,build_examples" 
+		description="generate all jar files.">
+
+  </target>
+
+  <target name="build_main" depends="compile_main,jar_jlog,jar_jlogic,jar_builtins,jar_animation" 
+		description="generate main JLog jar files.">
+
+  </target>
+
+  <target name="build_extras" depends="compile_extras,jar_database,jar_filesystem,jar_bsf" 
+		description="generate extras *Lib.jar files.">
+
+  </target>
+
+  <target name="build_examples" depends="compile_examples,jar_example_api,jar_example_bsf" 
+		description="generate extras *Lib.jar files.">
+
+  </target>
+
+
+  <target name="jar_jlog" depends="compile_main">
+    <jar jarfile="${jar_JLog}"
+		manifest="${srcDir}/MANIFEST.MF"
+		basedir="${classDir}"
+		includes="JLog*.class,**/Applet/*.class" />
+  </target>
+
+  <target name="jar_jlogic" depends="compile_main">
+    <jar destfile="${jar_jlogic}" 
+		basedir="${classDir}"
+		includes="**/JLog/Foundation/**/*.class,**/JLog/Terms/**/*.class,**/JLog/Parser/**/*.class"
+	/>
+  </target>
+
+  <target name="jar_builtins" depends="compile_main">
+    <jar jarfile="${jar_builtins}" 
+		basedir="${classDir}"
+		includes="**/JLog/Builtins/**/*.class" >
+		<fileset dir="${srcDir}/ubc/cs/JLog/Builtins" includes="INIT_BUILTINSLIB.TOC" />
+	</jar>
+  </target>
+
+  <target name="jar_animation" depends="compile_main">
+    <jar jarfile="${jar_Animation}" 
+		basedir="${classDir}"
+		includes="**/JLog/Animation/*.class" >
+		<fileset dir="${srcDir}/ubc/cs/JLog/Animation" includes="INIT_ANIMATIONLIB.TOC" />
+	</jar>
+  </target>
+
+  <target name="jar_database" depends="compile_extras">
+    <jar jarfile="${jar_Database}" 
+		basedir="${classDir}"
+		includes="**/JLog/Extras/DataBase/*.class" >
+		<fileset dir="${srcDir}/ubc/cs/JLog/Extras/DataBase" includes="INIT_DATABASELIB.TOC" />
+	</jar>
+  </target>
+
+  <target name="jar_filesystem" depends="compile_extras">
+    <jar jarfile="${jar_Filesystem}" 
+		basedir="${classDir}"
+		includes="**/JLog/Extras/FileSystem/*.class" >
+		<fileset dir="${srcDir}/ubc/cs/JLog/Extras/FileSystem" includes="INIT_FILESYSTEMLIB.TOC" />
+	</jar>
+  </target>
+
+  <target name="jar_bsf" depends="compile_extras" if="bsf.jar.exists">
+    <jar jarfile="${jar_BSF}" 
+		basedir="${classDir}"
+		includes="**/JLog/Extras/BSF/*.class" >
+		<fileset dir="${srcDir}/ubc/cs/JLog/Extras/BSF" includes="INIT_BSFLIB.TOC" />
+	</jar>
+  </target>
+
+
+  <target name="jar_example_api" depends="compile_example_api,build_main">
+    <jar jarfile="${jar_example_APIQueens}" 
+		manifest="${examplesDir}/API/MANIFEST.MF"
+		basedir="${classDir}"
+		includes="APIQueens.class" >
+	</jar>
+  </target>
+
+  <target name="jar_example_bsf" depends="compile_example_bsf,jar_bsf,build_main" if="bsf.jar.exists">
+    <jar jarfile="${jar_example_BSFScriptedUI}" 
+		manifest="${examplesDir}/BSF/MANIFEST.MF"
+		basedir="${classDir}"
+		includes="ScriptedUI*.class" >
+	</jar>
+  </target>
+
+
+<!-- =================================================================== -->
+<!-- Create Javadoc Documentation										 -->
+<!-- =================================================================== -->
+
+  <target name="doc">
+  
+    <mkdir dir="${docDir}" />
+
+    <javadoc destdir="${docDir}"
+			classpathref="basic.class.path">
+
+		<fileset dir="${srcDir}">
+			<include name="**/*.java"/>
+		</fileset>
+    
+	</javadoc>
+
+  </target>
+
+
+<!-- =================================================================== -->
+<!-- Install JLog into JLog directory									 -->
+<!-- =================================================================== -->
+
+  <target name="init_install">
+  
+    <mkdir dir="${installDir}" />
+
+	<copy todir="${installDir}">
+		<fileset dir="." includes="GPL.txt,LICENSE.txt,VERSIONS.txt,README.txt" />
+	</copy>
+
+  </target>
+
+  <target name="install" depends="init_install,install_main,install_extras,install_examples" 
+		description="complete JLog installation (requires build)">
+	
+  </target>
+
+  <target name="install_main" depends="init_install" 
+		description="basic JLog installation (requires build_main)">
+  
+	<copy todir="${installDir}">
+		<fileset dir="${buildDir}" includes="JLog.jar,jlogic.jar,builtinsLib.jar,animationLib.jar" />
+	</copy>
+	<copy todir="${installDir}/Help">
+		<fileset dir="${helpDir}" />
+	</copy>
+
+  </target>
+
+  <target name="install_extras" depends="init_install,install_extras_bsf"
+		description="extras JLog installation (requires build_extras)">
+  
+	<copy todir="${installDir}">
+		<fileset dir="${buildDir}" includes="databaseLib.jar,filesystemLib.jar" />
+	</copy>
+	
+  </target>
+
+  <target name="install_extras_bsf" depends="init_install" if="bsf.jar.exists">
+  
+	<copy todir="${installDir}">
+		<fileset dir="${buildDir}" includes="bsfLib.jar" />
+		<fileset dir="${libDir}" includes="${bsfLib}" />
+	</copy>
+	
+  </target>
+
+  <target name="install_examples" depends="init_install,install_examples_api,install_examples_bsf"
+		description="examples JLog installation (requires build_examples)">
+
+	<copy todir="${installDir}">
+		<fileset dir="${examplesDir}" includes="*.html" />
+		<fileset dir="${examplesDir}" includes="*.plog" />
+	</copy>
+	
+  </target>
+
+  <target name="install_examples_api" depends="init_install">
+  
+	<copy todir="${installDir}">
+		<fileset dir="${buildDir}" includes="APIQueens.jar" />
+		<fileset dir="${examplesDir}" includes="queens.plog" />
+	</copy>
+	
+  </target>
+
+  <target name="install_examples_bsf" depends="init_install">
+  
+	<copy todir="${installDir}">
+		<fileset dir="${buildDir}" includes="BSFScriptedUI.jar" />
+		<fileset dir="${examplesDir}/BSF" includes="*.plog" />
+	</copy>
+	
+  </target>
+
+
+<!-- =================================================================== -->
+<!-- Undo the actions of compile, dist, and run targets                  -->
+<!-- =================================================================== -->
+  
+  <target name="clean"
+          description="remove class files, backups, and distribution zip">
+
+    <delete dir="${classDir}" /> 
+    <delete dir="${installDir}" /> 
+    <delete dir="${docDir}" /> 
+
+    <delete>
+      <fileset dir="${buildDir}" includes="*.jar" defaultexcludes="no" />
+      <fileset dir="${buildDir}" includes="*.class" defaultexcludes="no" />
+    </delete> 
+
+    <delete>
+      <fileset dir="${srcDir}" includes="**/.DS_Store" defaultexcludes="no" />
+      <fileset dir="${helpDir}" includes="**/.DS_Store" defaultexcludes="no" />
+      <fileset dir="${examplesDir}" includes="**/.DS_Store" defaultexcludes="no" />
+    </delete> 
+
+  </target>
+
+
+<!-- =================================================================== -->
+<!-- Information 														 -->
+<!-- =================================================================== -->
+  
+	<target name="info" description="project related help">
+
+		<echo>
+	
+		 Typical usage is: ant build install
+	
+		 For a list of project targets: ant -projecthelp
+
+	bsfLib.jar requires the bsf.jar file from http://jakarta.apache.org/bsf/ in the lib/ directory.
+		  
+		</echo>
+		
+	</target>
+
+
+<!-- =================================================================== -->
+<!-- Unit Testing														 -->
+<!-- =================================================================== -->
+  
+	<target name="test" depends="build" description="unit testing" if="junit.jar.exists">
+
+		<echo message="TESTING IS NOT YET WORKING" />
+		
+		<junit printsummary="on">
+		
+			<test name="testAPI.class" />
+			<test name="testDB.class" />
+			<test name="testFS.class" />
+			<test name="testBSF.class" if="bsf.jar.exists" />
+		
+		</junit>
+
+	</target>
+
+
+</project>
+
+

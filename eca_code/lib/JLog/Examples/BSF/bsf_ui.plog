@@ -1,0 +1,38 @@
+
+% This file is used in conjunction with the ScriptedUI example.
+
+:- load_library('bsf'). % JLog BSF Library
+
+handleEast :- println('East').
+handleWest :- println('West').
+%println(STR) :- bsf('lookup', 'out', OUT), invoke(OUT, 'println', [STR], Y).
+println(STR) :- bsf_static('java.lang.System.out', OUT), bsf_invoke(_, OUT, 'println', [STR]).
+
+bsf_import('java.awt'),
+
+bsf_lookup('centerPanel', CP),
+
+bsf_create(BL, 'BorderLayout', []),
+bsf_invoke(_, CP, 'setLayout', [BL]),
+
+bsf_create(LBL, 'Label', ['Middle from JLog BSF Library']),
+bsf_invoke(_, CP, 'add', ['Center', LBL]),
+
+bsf_create(TF1, 'TextField', ['north text from JLog BSF Library']),
+bsf_invoke(_, CP, 'add', ['North', TF1]),
+
+bsf_create(TF2, 'TextField', ['south text from JLog BSF Library']),
+bsf_invoke(_, CP, 'add', ['South', TF2]),
+
+bsf_create(BTN1, 'Button', ['inner east from JLog BSF Library']),
+bsf_addevent(BTN1, 'action', 'handleEast.'),
+bsf_invoke(_, CP, 'add', ['East', BTN1]),
+
+bsf_create(BTN2, 'Button', ['inner west from JLog BSF Library']),
+bsf_addevent(BTN2, 'action', 'handleWest.'),
+bsf_invoke(_, CP, 'add', ['West', BTN2]),
+
+bsf_invoke(F, CP, 'getParent', []),
+bsf_invoke(_, F, 'setTitle', ['Hello from Jlog BFS Library (title reset from JLog BSF Library)']).
+
+% vim:set syntax=prolog:

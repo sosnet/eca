@@ -1,0 +1,137 @@
+% The following code is copyright 2002, 2005 by Glendon Holst
+
+:- load_library('animation').
+
+% Demo: ?- init_tree_graphics, demo_tree_animate.
+
+% demo_tree_animate.  Cycles through the four views of each node and arc.
+
+demo_tree_animate :- depth(D), branching_factor(B), t_nodes(D,B,N),
+				animate(objects,[Os]), 
+                demo_nodes_arcs(Os,black),demo_nodes_arcs(Os,green),
+                demo_nodes_arcs(Os,blue),demo_nodes_arcs(Os,lightgray),
+                !, demo_tree_animate.
+
+demo_nodes_arcs([],_). 
+demo_nodes_arcs([(Na,O)|Os],C) :- atom_chars(Na,Nc), number_chars(N,Nc), 
+					N > 1, A is - N, !, 
+					animate(getshape,[O,[box,[B]]]),
+					animate(getshape,[A,[line,[L]]]),
+                    animate(setattr,[B,[(colour,C)]]), 
+                    animate(setattr,[L,[(colour,C)]]), 
+					animate(update,[]), 
+                    demo_nodes_arcs(Os,C). 
+demo_nodes_arcs([(Na,O)|Os],C) :- atom_chars(Na,Nc), number_chars(N,Nc), 
+					N > 0, !, 
+					animate(getshape,[O,[box,[B]]]),
+                    animate(setattr,[B,[(colour,C)]]), 
+					animate(update,[]), 
+                    demo_nodes_arcs(Os,C). 
+demo_nodes_arcs([(N,O)|Os],C) :- demo_nodes_arcs(Os,C). 
+
+% init_tree constructs a graphical representation of the tree given the 
+% depth/1 and branching_factor/1 predicates.  The constructed nodes are labelled by their numbers,
+% while the arcs are labelled by the negative number of the node they connect to.  The
+% node and arc graphic elements have four possible colours, setable via the 'setview' animate command.
+
+init_tree_graphics :- animate(init,[1.0]), 
+					depth(D), branching_factor(B),
+                    t_nodes(D,B,N), 
+					make_nodes(N), 
+					make_arcs(N), 
+                    animate(update,[]).
+
+% make_nodes(+N) makes graphical elements for all tree nodes of N or less.
+
+make_nodes(N) :- N =< 0.
+make_nodes(N) :- N > 0, make_box(N), node_position(N,X,Y),
+				Na is truncate(N), animate(move,[Na,X,Y]),
+                N1 is N - 1, make_nodes(N1).
+
+% make_arcs(+N) makes graphical elements for all tree arcs connected to node N or less.
+
+make_arcs(N) :- N =< 0.
+make_arcs(N) :- N > 0, t(N,C), make_arcs(N,C), N1 is N - 1, make_arcs(N1).
+
+% make_arcs(+N,+C) makes an arc from N to each element in child list C.
+
+make_arcs(_,[]).
+make_arcs(N,[C|Cs]) :- Cng is truncate(- C), 
+						animate(create,[Cng,1,1]), get_line(N,C,Line),
+                        animate(addshape,[Cng,[line,line,[Line,lightgray]]]),
+                        make_arcs(N,Cs).
+
+% make_box(+N) makes four coloured boxes for node N.
+
+make_box(Na) :- N is truncate(Na),
+            animate(create,[N,2,1]), 
+			get_box(N,Box),
+            animate(addshape,[N,[box,polygon,[Box,false,gray]]]),
+			animate(addshape,[N,[label,text,[N,[geneva,plain,9],black,2,15]]]).
+
+% get_box(+N,?B) B is a box shape B for a node N (box for non-goal, diamond for goal).
+
+get_box(N,B) :- goal_nodes(G), node_member(N,G), !, box_size(X,Y), 
+                X2 is X / 2, Y2 is Y / 2, B = [(0,Y2),(X2,0),(X,Y2),(X2,Y)].
+get_box(N,B) :- box_size(X,Y), B = [(0,0),(X,0),(X,Y),(0,Y)].
+
+% get_line(+N,+C,?L) L is a line connecting parent node N with child node C.
+
+get_line(N,C,L) :- node_position(N,Xn,Yn), node_position(C,Xc,Yc), box_size(X,Y), 
+                Xn1 is Xn + (X / 2), Yn1 is Yn + Y, Xc1 is Xc + (X / 2), Yc1 is Yc, 
+                L = [(Xn1,Yn1),(Xc1,Yc1)].
+
+% node_position(+N,?X,?Y) is true when node N should appear at position X, Y.
+                
+node_position(N,X,Y) :- depth(D), branching_factor(B), box_size(Xw,Yh), Pad = 4, 
+                M is pow(B,D), W is (M * (Xw + Pad)),
+                t_level(N,B,L,I), Fw is round(W / pow(B,L)), Of is round((Fw - Xw) / 2),
+                X is (I * Fw) + Of, Y is L * (Yh + 40).
+
+% box_size(?X,?Y) is true when boxes have width X and height Y.
+
+box_size(20,20).
+
+% depth(D) is true when D is the depth of the tree.
+
+depth(3).
+
+% branching_factor(B) is true when B is the branching factor of the tree.
+
+branching_factor(3).
+
+% t(+N,-C) is true if C is the list of child nodes of parent node N.
+% nodes are numbered from 1.
+
+t(N,[]) :- depth(D), branching_factor(B), D1 is D - 1, t_nodes(D1,B,N1), N > N1, !. 
+t(N,C) :- branching_factor(B), t_level(N,B,L,I), t_nodes(L,B,L1), I1 is (I * B) + L1 + 1, t_list(I1,B,C).
+
+% t_list(+N,+C,?L) is true when L is a list of C elements, starting N, N+1, N+2,...
+
+t_list(_,0,[]).
+t_list(N,C,[N|Ns]) :- C > 0, C1 is C - 1, N1 is N + 1, t_list(N1,C1,Ns).
+
+% t_nodes(+L,+B,?N).  N is the number of nodes in a tree of level L, and branching factor B.
+% level 0 is the root node.
+
+%t_nodes(L,B,N) :- N is floor((B ** (L + 1)) / (B - 1)).
+t_nodes(L,B,N) :- N is floor(pow(B , (L + 1)) / (B - 1)).
+
+% t_level(+N,+B,?L,?I). node N is the Ith node on level L of a tree with branching factor B.
+% level 0 is the root node, index I starts with 0 for the first node.
+
+t_level(N,B,L,I) :- L is ceiling(log((N * (B - 1)) + 1) / log(B)) - 1, L1 is L - 1, t_nodes(L1,B,M), I is N - M - 1.
+
+% start_nodes(?N) is true when N is the list of start nodes.
+
+start_nodes([1]).
+
+% goal_nodes(?N) is true when N is the list of goal nodes.
+
+goal_nodes([12,21,38]).
+
+% node_member(+N,+G) determines if G contains a number equivalent to N in an arithmetic sense.
+
+node_member(N1,[N2|_]) :- N1 =:= N2.
+node_member(N1,[_|Ns]) :- node_member(N1,Ns).
+

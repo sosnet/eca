@@ -1,0 +1,49 @@
+JLog supports special animate/2 predicates that interface with a simple animation engine.  The animation engine can construct compound objects made from polygons, images, or text.  It also supports paths that denote where objects have moved.
+
+These predicates are in the animation library (animationLib.jar), and are loaded as follows:
+
+:- load_library('animation').
+All animate/2 predicates are of the form, animate(+Command,+List),  where List contains information particular to the Command.animate(init,[Magnification]).Before using the animation engine, it must be initialized.  init is the command atom, and Magnifcation is a float that determines the multiplication factor used for movement and polygons.
+
+animate(setmagnify,[Magnification]).
+
+To change the magnification factor, use the setmagnify command atom, with the float Magnification factor.animate(create,[Name,Level,Views]).
+animate(create,[Name,Level,Views,Obj]).This predicate creates a new object.  create is the command atom.  Name is an atom and is the name of the created object.  Use the name to reference this object in the future.  Level is an integer that determines drawing order.  Smaller Levels are drawn first, and higher Levels overlap object below.  Views is an integer determining how many different views exist of the same object.  This is useful for animation when an object made from several view could simulate a perambulating multiped.  The optional Obj is an object reference to the newly created object. animate(delete,[Name]).This predicate removes an object from the animation engine.  delete is the command atom.  Name is the name of a previously created object, or an object reference.
+
+animate(objects,[ObjList]).
+
+This predicate returns a list of animation objects in the environment.  ObjList must unify with the list which has the following pattern: [(Name,Obj)|ObjList], where Name is the object name, and Obj is a direct reference to the object.
+
+Note: The returned Name will be an atom, not a number.  If you've named objects with numbers, then use atom_chars/2 and number_chars/2 to convert the atom back into a number (e.g., if the number is needed for a computation).
+
+animate(getobject,[Name,[Obj]]).
+
+This predicate returns the object reference Obj for the named object Name.  Name is an atom with the name of a created object, or an object reference.  Obj will be an object reference.
+animate(addshape,[Name,[ShapeName,polygon,[Points,Boolean,Colour]]]).animate(addshape,[Name,[ShapeName,line,[Points,Colour]]]).animate(addshape,[Name,[ShapeName,text,[String,[Font,FStyle,FSize],Colour,XPos,YPos]]]).animate(addshape,[Name,[ShapeName,image,[File,XPos,YPos,Width,Height]]]).
+
+or
+
+animate(addshape,[Name,[ShapeName,ShapeType,AttrList,ShapeRef]]).
+These predicates add a shape to the specified object.  addshape is the command atom.  Name is  an atom with the name of a created object, or an object reference.  ShapeName is an atom and is the name of the shape.  polygon, text, and image are the shape type atoms.  Points is a list of real points in the form [(x1,y1),(x2,y2),...] (for lines, only the first two pairs are used).  Boolean is either the atoms true or false, and determines whether the polygon is filled or not.  Colour is an atom with the following values: black, blue, cyan, darkgray, gray, green, lightgray, magenta, orange, pink, red, white, or yellow; or a trinary predicate rgb(R,G,B) where R, G, and B represent integer (0..255) colour values for Red, Green, and Blue respectively.  Colour determines the colour of the polygon or the text.  String is an atom or string and is the text displayed by this shape.  Font is an atom corresponding to the name of an available font.  FStyle is an atom with the following values: bold, italic, or plain.  This determines the font style.  FSize is an number that determines the font's size.  XPos and YPos are real values that determine the X and Y offset.  By default, shapes are positioned at (0,0).  Polygons don't need an offset because the Points list can contain the offset.  Width and Height are real values specifying the width and height of images in global coordinates.  File is an atom that is the name for a Java supported image format.  Shapes are added to the current object view.  The alternate form adds an optional ShapeRef, which is a reference to the created shape.
+
+animate(shapes,[Name,ShapeList]).
+
+This predicate returns a list of animation shapes enclosed in the named object.  Name is an atom with the name of a created object, or an object reference.  ShapeList must unify with the list which has the following pattern: [(ShapeName,ShapeObj)|ShapeList], where ShapeName is the shape name atom, and ShapeObj is a direct reference to the shape.
+
+Note: The returned ShapeName will be an atom, not a number.  If you've named shapes with numbers, then use atom_chars/2 and number_chars/2 to convert the atom back into a number (e.g., if the number is needed for a computation).
+
+
+animate(getshape,[Name,[ShapeName,[ShapeObj]]]).
+
+This predicate returns the object reference ShapeObj for the named shape ShapeName enclosed by object Name.  Name is  an atom with the name of a created object, or an object reference.  Shapename is an atom and the name of an existing shape contained in the current view of the named object.  ShapeObj will be a shape object reference.
+animate(removeshape,[ShapeObj]).This predicate removes a shape from an object.  removeshape is the command atom.  ShapeObj is a previously created shape object reference.  For old code using atom name references of the form: animate(removeshape,[Name,[ShapeName]]), replace with the following commands: animate(getshape,[Name,[ShapeName,[ShapeObj]]]), animate(removeshape,[ShapeObj]).  animate(setview,[Name,View]).This predicate sets the current view for the named object.  All drawing, adding, or removing of shapes is done from the current view.  setview is the command atom.  Name is an atom with the name of an existing object, or an object reference.  View is an integer whose value is the new object view (zero based).
+
+animate(setlevel,[Name,Level]).
+
+This predicate sets the current level for the named object.  setlevel is the command atom.  Name is an atom with the name of an existing object, or an object reference.  Level is an integer that determines drawing order.  Smaller Levels are drawn first, and higher Levels overlap object below.animate(path,[Name,Memory,Increment,Colour]).This predicate turns on the path object path feature for an object.  Objects can keep track of their positions and draw out a path each time they are drawn.  path is the command atom.  Name is an atom with the name of an existing object, or an object reference.  Memory is an integer whose value is the number of previous positions to remember.  If Memory is -1, then the object remembers all previous positions.  Increment is an integer and the number of movements to ignore before recording the new position.  Colour and atom chosen from the choices provided previously, and is the colour for the path points.animate(move,[Name,XPos,YPos]).This predicate moves the object to the specified position.  move is the command atom.  Name is an atom with the name of an existing object, or an object reference.  XPos and YPos are integers and determine the X and Y position of the object respectively.animate(rotate,[Name,Radians]).This predicate rotates the object.  Only the polygon and line shapes are rotated entirely (for other shapes, the starting location is rotated).  rotate is the command atom.  Name is an atom with the name of an existing object, or an object reference.  Radians is a float number and is the number of radians to rotate the object.
+
+animate(getattr,[Ref,Attr]).
+animate(setattr,[Ref,Attr]).
+
+These are getter and setter predicates for object and shape attributes.  getattr and setattr are the command atoms. Ref is either an object or shape reference (i.e., not an atom name).  Attr is an attribute list of (Key,Value) pairs, of the form: [(K,V)|...].  For the getter predicate, Attr should be an unbound variable.  For the setattr predicate, only those attribute keys appropriate for the specified object / shape (via Ref) are evaluated.
+animate(update,[]).This predicate clears the graphics region and redraws all the objects.  update is the command atom. 
