@@ -1,0 +1,570 @@
+\pdfminorversion=4
+\documentclass{beamer}
+
+%\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{beamerthemedefault}
+\usepackage{bbding} %used for checkmarks in itemize
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+
+\newcommand*\tick{\item[\Checkmark]}
+\newcommand*\fail{\item[\XSolidBrush]}
+\newcommand*\hand{\item[\HandRight]}
+
+\title{ECA group 12 \\ Task 2}
+\author{\small{P\"ollitsch, Pr\"unster ,Sommer ,Vierthaler}}
+\date{May 2013}
+
+
+\begin{document}
+%-----------------------------------------------------------------------
+\begin{frame}[plain]
+	\titlepage
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{summary of our task02}
+order type creation of a given pointset\\
+\begin{itemize}
+\item focus on combinatoric attributes
+\item using tools presented in the lecture
+\item grid size and amount of points limited
+\end{itemize}
+thoughts about \\
+\begin{itemize}
+\item collinear points within $\lambda$-matrix
+\item automatic / semiautomatic creation of point set from $\lambda$-matrix
+\item creation of all $\lambda$-matrices
+\end{itemize}
+
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{our practical goals}
+java program
+\begin{itemize}
+\tick gives user visible input/output
+\tick calculates order types for different labellings (left handed orientation)
+\tick chooses minimal order type (=fingerprint)
+\hand semiautomatic tool for creating point sets from $\lambda$
+\fail count all order types for given amount of points
+\end{itemize}
+\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: init, mark collinear points}
+\includegraphics[width=\textwidth]{figures/00_program_init_4_points.png}
+\end{frame}
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{screenshot: delete points}
+%\includegraphics[width=\textwidth]{figures/01_program_delete.png}
+%\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: correct labeling according to fingerprint}
+\includegraphics[width=\textwidth]{figures/02_program_labeling.png}
+\end{frame}
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{screenshot: move points}
+%\includegraphics[width=\textwidth]{figures/04_program_move_points.png}
+%\end{frame}
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{screenshot: select single point}
+%\includegraphics[width=\textwidth]{figures/05_program_select_points.png}
+%\end{frame}
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{screenshot: select multiple points}
+%\includegraphics[width=\textwidth]{figures/06_program_multiple_selection.png}
+%\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: create points from $\lambda$ - matrix: init}
+\includegraphics[width=\textwidth]{figures/07_point_creation.png}
+\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: create points from $\lambda$ - matrix: step 1}
+\includegraphics[width=\textwidth]{figures/07_point_creation_step1.png}
+\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: create points from $\lambda$ - matrix: step 2}
+\includegraphics[width=\textwidth]{figures/07_point_creation_step2.png}
+\end{frame}
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{screenshot: create points from $\lambda$ - matrix: valid}
+\includegraphics[width=\textwidth]{figures/07_point_creation_valid.png}
+\end{frame}
+
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\section{recap $\lambda$-matrix}
+%\frametitle{$\lambda$-matrix creation}
+%\begin{tabular}{| c || c | c | c | c |}
+%    & 1 & 2 & 3 & 4 \\
+% \hline
+%  1 & - & \textbf{0} & 1 & 2 \\
+%  2 & 2 & - & 0 & 1 \\
+%  3 & 1 & 2 & - & 0 \\
+%  4 & 0 & 1 & 2 & - \\
+%\end{tabular}
+%\begin{minipage}{0.5\textwidth}
+%\includegraphics[width=200px]{figures/lambda_not_colinear_12}
+%\end{minipage}
+%\end{frame}
+%
+%%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{$\lambda$-matrix creation}
+%\begin{tabular}{| c || c | c | c | c |}
+%    & 1 & 2 & 3 & 4 \\
+% \hline
+%  1 & - & 0 & \textbf{1} & 2 \\
+%  2 & 2 & - & 0 & 1 \\
+%  3 & 1 & 2 & - & 0 \\
+%  4 & 0 & 1 & 2 & - \\
+%\end{tabular}
+%\begin{minipage}{0.5\textwidth}
+%\includegraphics[width=200px]{figures/lambda_not_colinear_13}
+%\end{minipage}
+%\end{frame}
+%
+%%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{$\lambda$-matrix creation}
+%\begin{tabular}{| c || c | c | c | c |}
+%    & 1 & 2 & 3 & 4 \\
+% \hline
+%  1 & - & 0 & 1 & \textbf{2} \\
+%  2 & 2 & - & 0 & 1 \\
+%  3 & 1 & 2 & - & 0 \\
+%  4 & 0 & 1 & 2 & - \\
+%\end{tabular}
+%\begin{minipage}{0.5\textwidth}
+%\includegraphics[width=200px]{figures/lambda_not_colinear_14}
+%\end{minipage}
+%\end{frame}
+%
+%%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{$\lambda$-matrix creation}
+%\begin{tabular}{| c || c | c | c | c |}
+%    & 1 & 2 & 3 & 4 \\
+% \hline
+%  1 & - & 0 & 1 & 2 \\
+%  2 & \textbf{2} & - & 0 & 1 \\
+%  3 & 1 & 2 & - & 0 \\
+%  4 & 0 & 1 & 2 & - \\
+%\end{tabular}
+%\begin{minipage}{0.5\textwidth}
+%\includegraphics[width=200px]{figures/lambda_not_colinear_21}
+%\end{minipage}
+%\end{frame}
+
+%-----------------------------------------------------------------------
+% % hide following pictures
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & \textbf{0} & 1 \\
+%   3 & 1 & 2 & - & 0 \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_23}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & 0 & \textbf{1} \\
+%   3 & 1 & 2 & - & 0 \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_24}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & 0 & 1 \\
+%   3 & \textbf{1} & 2 & - & 0 \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_31}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & 0 & 1 \\
+%   3 & 1 & 2 & - & 0 \\
+%   4 & \textbf{0} & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_41}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & 0 & 1 \\
+%   3 & 1 & 2 & - & 0 \\
+%   4 & 0 & \textbf{1} & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_42}
+% \end{minipage}
+% \end{frame}
+% 
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 1 & 2 \\
+%   2 & 2 & - & 0 & 1 \\
+%   3 & 1 & 2 & - & 0 \\
+%   4 & 0 & 1 & \textbf{2} & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_not_colinear_43}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+ \begin{frame}
+ \frametitle{$\lambda$-matrix creation}
+ \begin{tabular}{| c || c | c | c | c |}
+     & 1 & 2 & 3 & 4 \\
+  \hline
+   1 & - & 0 & 1 & 2 \\
+   2 & 2 & - & 0 & 1 \\
+   3 & 1 & 2 & - & 0 \\
+   4 & 0 & 1 & 2 & - \\
+ \end{tabular}
+ \begin{minipage}{0.5\textwidth}
+ \includegraphics[width=200px]{figures/lambda_not_colinear}
+ \end{minipage}
+ \end{frame}
+% 
+%-----------------------------------------------------------------------
+%-----------------------------------------------------------------------
+\begin{frame}
+
+\frametitle{$\lambda$-matrix symmetry}
+\begin{center}
+\begin{tabular}{| c || c | c | c | c |}
+    & 1 & 2 & 3 & 4 \\
+ \hline
+  1 & - & \textcolor{red}{0} & \textcolor{blue}{1} & \textcolor{violet}{2} \\
+  2 & \textcolor{red}{2} & - & \textcolor{green}{0} & \textcolor{orange}{1} \\
+  3 & \textcolor{blue}{1} & \textcolor{green}{2} & - & \textcolor{magenta}{0} \\
+  4 & \textcolor{violet}{0} & \textcolor{orange}{1} & \textcolor{magenta}{2} & - \\
+\end{tabular}
+\end{center}
+\vspace{3em}
+sum is always n-2 ... in this case: 2
+\end{frame}
+% 
+%-----------------------------------------------------------------------
+\begin{frame}
+\section{$\lambda$-matrix for collinear point sets}
+\frametitle{collinear points}
+
+lets look at collinear points
+\end{frame}
+%-----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{$\lambda$-matrix creation for collinear sets}
+\begin{tabular}{| c || c | c | c | c |}
+    & 1 & 2 & 3 & 4 \\
+ \hline
+  1 & - & \textbf{0} & \textbf{0} & 2 \\
+  2 & 1 & - & \textbf{0} & 1 \\
+  3 & 1 & 1 & - & 0 \\
+  4 & 0 & 1 & 2 & - \\
+\end{tabular}
+\begin{minipage}{0.5\textwidth}
+\includegraphics[width=200px]{figures/lambda_colinear_12_13}
+\end{minipage}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{$\lambda$-matrix creation for collinear sets}
+\begin{tabular}{| c || c | c | c | c |}
+    & 1 & 2 & 3 & 4 \\
+ \hline
+  1 & - & 0 & 0 & \textbf{2} \\
+  2 & 1 & - & 0 & 1 \\
+  3 & 1 & 1 & - & 0 \\
+  4 & 0 & 1 & 2 & - \\
+\end{tabular}
+\begin{minipage}{0.5\textwidth}
+\includegraphics[width=200px]{figures/lambda_colinear_14}
+\end{minipage}
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{$\lambda$-matrix creation for collinear sets}
+\begin{tabular}{| c || c | c | c | c |}
+    & 1 & 2 & 3 & 4 \\
+ \hline
+  1 & - & 0 & 0 & 2 \\
+  2 & \textbf{1} & - & 0 & 1 \\
+  3 & \textbf{1} & \textbf{1} & - & 0 \\
+  4 & 0 & 1 & 2 & - \\
+\end{tabular}
+\begin{minipage}{0.5\textwidth}
+\includegraphics[width=200px]{figures/lambda_colinear_21_31_32}
+\end{minipage}
+\end{frame}
+
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & \textbf{1} \\
+%   3 & 1 & 1 & - & 0 \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear_24}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear point sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & 1 \\
+%   3 & 1 & 1 & - & \textbf{0} \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear_34}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear point sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & 1 \\
+%   3 & 1 & 1 & - & 0 \\
+%   4 & \textbf{1} & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear_41}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear point sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & 1 \\
+%   3 & 1 & 1 & - & 0 \\
+%   4 & 0 & \textbf{1} & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear_42}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear point sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & 1 \\
+%   3 & 1 & 1 & - & 0 \\
+%   4 & 0 & 1 & \textbf{2} & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear_43}
+% \end{minipage}
+% \end{frame}
+% 
+% %-----------------------------------------------------------------------
+% \begin{frame}
+% \frametitle{$\lambda$-matrix creation for colinear point sets}
+% \begin{tabular}{| c || c | c | c | c |}
+%     & 1 & 2 & 3 & 4 \\
+%  \hline
+%   1 & - & 0 & 0 & 2 \\
+%   2 & 1 & - & 0 & 1 \\
+%   3 & 1 & 1 & - & 0 \\
+%   4 & 0 & 1 & 2 & - \\
+% \end{tabular}
+% \begin{minipage}{0.5\textwidth}
+% \includegraphics[width=200px]{figures/lambda_colinear}
+% \end{minipage}
+% \end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{$\lambda$-matrix symmetry for collinear point sets}
+\begin{center}
+\begin{tabular}{| c || c | c | c | c |}
+    & 1 & 2 & 3 & 4 \\
+ \hline
+  1 & - & \textcolor{red}{0} & \textcolor{violet}{0} & 2 \\
+  2 & \textcolor{red}{1} & - & \textcolor{blue}{0} & 1 \\
+  3 & \textcolor{violet}{1} & \textcolor{blue}{1} & - & 0 \\
+  4 & 0 & 1 & 2 & - \\
+\end{tabular}\\
+\end{center}
+
+one can see that this matrix is not symmetric for every point.
+\begin{itemize}
+\item \textcolor{red}{point 1 is collinear with 2 and 3}
+\item \textcolor{violet}{point 2 is collinear with 1 and 3}
+\item \textcolor{blue}{point 3 is collinear with 1 and 2}
+
+\end{itemize}
+$\rightarrow$ complete $\lambda$-matrix holds sufficient information regarding collinear points\\
+$\rightarrow$ upper $\lambda$-matrix is sufficient for non collinear matrices
+
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{detection collinear candidates}
+we use the presented orientation algorithm in order to detect orientation and collinearity
+\begin{itemize}
+\item if points are contained two collinear groups all 4 points are collinear
+\begin{itemize}
+  \item ABC collinear, BCD collinear $\rightarrow$ ABCD collinear
+\end{itemize}
+\item this also holds for more than two sets
+\end{itemize}
+%furthermore we found out that collinearities can be found while creating $\lambda$-matrix
+$ \rightarrow $ furthermore collinearities can be found during $\lambda$-matrix creation
+\end{frame}
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{deterministic automatic creation}
+correction method
+\begin{itemize}
+  \item put all points on convex hull
+  \item correct single points if $\lambda$-matrix differs
+  \item disadvantage:  gets very complicated, even for small amount of points
+\end{itemize}
+insertion method
+\begin{itemize}
+  \item insert points according to $\lambda$-matrix
+      \begin{itemize}
+       \item correct area can be found via orientation determination
+      \end{itemize} 
+  \item backtracking
+      \begin{itemize}
+       \item reverse step if area has vanished
+      \end{itemize} 
+  
+\end{itemize}
+\end{frame}
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{semiautomatic approach for creating point set from $\lambda$-matrix}
+\begin{itemize}
+  \item automatic creation is very hard
+  \item human support would make that task pretty easy
+  \item first two points are inserted automatically
+  \item colourise "forbidden" areas
+  \item additional points are inserted according to $\lambda$-matrix
+  \item moving points inside an area will not change the fingerprint
+\end{itemize}
+\end{frame}
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{further ideas}
+
+
+\begin{itemize}
+  \item count empty triangles?\\no, order types are overkill for that! ($d = 2n - 2 - h$) (Eulerscher Polyedersatz)
+  \item automatic creation of point set representation from $\lambda$-matrix?\\ yes, once you have this anything is possible!
+  \begin{itemize} 
+    \item non deterministic approach (easy)
+    \item deterministic approach (hard)
+    \item prolog approach (cheap! needs well-designed attributes, though)
+  \end{itemize}
+  
+\end{itemize}
+\end{frame}
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{automatic creation of $\lambda$-matrices}
+
+\begin{itemize} 
+  \item idea: create all valid $\lambda$-matrices $\rightarrow$ all different point sets
+  \item determine valid $\lambda$-matrices: hard problem?
+  \item $\rightarrow$ our approach: generate "arbitrary" $\lambda$-matrix and check if valid by automatic drawing
+\end{itemize}
+  
+\end{frame}
+ 
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{goodbye}
+
+thank you for your attention
+  
+\end{frame}
+% -----------------------------------------------------------------------
+\end{document}
