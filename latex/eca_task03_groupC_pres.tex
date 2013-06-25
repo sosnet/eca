@@ -14,8 +14,27 @@
 \newcommand*\fail{\item[\XSolidBrush]}
 \newcommand*\hand{\item[\HandRight]}
 
-\title{ECA group 5, 12, 18 \\ Task 3}
-\author{\small{Gr 5: Mandl, Ankele, Jeran\\Gr 12: P\"ollitsch, Pr\"unster, Sommer ,Vierthaler\\Gr 18: Fr"ohlich, Spitzer, Herrgesell}}
+\usetheme{Boadilla}
+
+\makeatother
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatletter
+\setbeamertemplate{navigation symbols}{}
+
+\title{Task 3 \\ \small{Gr 5: Mandl, Ankele, Jeran\\Gr 12: P\"ollitsch, Pr\"unster, Sommer, Vierthaler\\Gr 18: Fr"ohlich, Spitzer, Herrgesell}}
+\author{ECA group C (5, 12, 18)}
 \date{May 2013}
 
 
@@ -27,9 +46,47 @@
 
 %-----------------------------------------------------------------------
 \begin{frame}
-\frametitle{summary of our task03}
-TODO
-
+\frametitle{summary of task03}
 \end{frame}
 % -----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+\section{Introduction}
+\begin{frame}
+\frametitle{Introduction}
+\begin{enumerate}
+\item GROUP 6: create at least all possible $\lambda$ - matrices for a specific n
+  \begin{itemize}
+  \item look for clever ways
+  \item duplicates are allowed
+  \end{itemize}
+\item GROUP 12: check if given $\lambda$-matrices can be realized
+  \begin{itemize}
+  \item throw away invalid $\lambda$-matrices
+  \item must be fast
+  \end{itemize}
+\item GROUP 18: count empty triangles with given $\lambda-matrices$
+    \begin{itemize}
+    \item in theory these matrices have already been checked
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+% -----------------------------------------------------------------------
+
+
+
+%-----------------------------------------------------------------------
+\section{first approach}
+\begin{frame}
+\frametitle{first approach}
+Our first approach consisted 
+\end{frame}
+% -----------------------------------------------------------------------
+
+% -----------------------------------------------------------------------
+\include{group12}
+%-----------------------------------------------------------------------
+\include{group18}
+%-----------------------------------------------------------------------
+\include{group5}
 \end{document}
