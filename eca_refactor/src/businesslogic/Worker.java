@@ -20,6 +20,7 @@ public class Worker implements Runnable {
   public void run() {
     for(LambdaMatrix mat:mats)
       try {
+        System.out.println(mat.toString());
         buffer.add(new CheckLambda(mat).realize());
       } catch (Exception e) {
         // TODO Auto-generated catch block

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import jpl.Atom;
+import jpl.Compound;
 import jpl.JPL;
 import jpl.Query;
 import jpl.Term;
@@ -71,8 +72,10 @@ public class CheckLambda {
 
     System.out.println("consult "
         + (clpf.oneSolution() != null ? "succeeded" : "failed"));
+    
     System.out.println("consult "
         + (load.oneSolution() != null ? "succeeded" : "failed"));
+    
     HashMap<Integer, Set<Integer>> cc = new HashMap<>();
     for (int i = 0; i < lm.getDimenstion(); ++i) {
       calcCollCandidates(i, cc);
