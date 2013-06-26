@@ -1,8 +1,8 @@
 clear all;
 close all;
 
-N = 3;
-K = 3;
+N = 3;  %gridsize
+K = 3;  %#points
 
 N2 = N*N;
 

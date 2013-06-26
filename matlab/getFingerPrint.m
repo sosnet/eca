@@ -1,5 +1,9 @@
 function[minLambda] = getFingerPrint(pointGrid)
 
+
+fid = fopen('output/lambdas.txt','w');
+
+
 debug = 1;
 
 N = size(pointGrid,1);
@@ -27,6 +31,31 @@ s = [x(k), y(k)];
 for i=1:size(s,1)-1
     l_Grid = labelPoints(pointGrid, N, K, s, i);
     [lambdaMatrix, colinearPointsVector] = getLambdaMatrix(l_Grid);
+    
+    
+    %print to txt file
+
+if fid>=0
+    fprintf(fid, '%.0f\n', N);
+    fprintf(fid, '%.0f\n', K);
+    fprintf(fid, '[');
+    for abc = 1:size(lambdaMatrix, 1)
+        for def = 1:size(lambdaMatrix, 2)
+            fprintf(fid, '%.0f', lambdaMatrix(abc,def));
+            if def < size(lambdaMatrix, 1)
+                fprintf(fid, ' ');
+            end
+        end
+        if abc < size(lambdaMatrix, 1)
+            fprintf(fid, ';');
+        end
+    end
+    fprintf(fid, ']\n\n');
+end
+
+    
+    %end print to txt file
+    
 %     if sum(colinearPointsVector) > 0
 %         minLambda = 0;
 %         return;
@@ -79,3 +108,6 @@ if debug == 1
     print('-dpng', ['output/',num2str(num),'.png']);
     clf;
 end
+
+
+    fclose(fid);
