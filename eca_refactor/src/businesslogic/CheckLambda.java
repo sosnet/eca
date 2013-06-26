@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import jpl.Atom;
+import jpl.JPL;
 import jpl.Query;
 import jpl.Term;
 import businesslogic.conf.ComputationConstants;
@@ -59,8 +60,8 @@ public class CheckLambda {
   }
 
   public Set<GridPoint> realize() throws Exception {
-    // JPL.setNativeLibraryDir("/usr/lib/swipl-6.2.6/lib/x86_64-linux");
-    // JPL.setNativeLibraryName("jpl");
+    JPL.setNativeLibraryDir("/usr/lib/swipl-6.2.6/lib/x86_64-linux");
+    JPL.setNativeLibraryName("jpl");
     jpl.JPL.loadNativeLibrary();
     Query clpf = new Query("use_module(library(clpfd))");// , new Term[] { new
                                                          // Compound("library",
