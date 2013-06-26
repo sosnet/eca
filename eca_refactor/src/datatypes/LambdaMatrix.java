@@ -18,9 +18,11 @@ import businesslogic.conf.ComputationConstants;
 public class LambdaMatrix {
 
   private int[][] matrix;
+  private int gridsize;
 
-  public LambdaMatrix(int dimension) {
+  public LambdaMatrix(int dimension, int gridsize) {
     matrix = new int[dimension][dimension];
+    this.gridsize = gridsize;
   }
 
   @Override
@@ -150,6 +152,14 @@ public class LambdaMatrix {
     }
 
     return matrix[p1][p2];
+  }
+  
+  public void set (int p1, int p2, int value) {
+    matrix[p1][p2] = value;
+  }
+
+  public int getGridsize() {
+    return gridsize;
   }
 
 //  public boolean equals(Object o) {
