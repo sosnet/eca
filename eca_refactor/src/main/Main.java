@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 import businesslogic.Worker;
 import datatypes.GridPoint;
@@ -30,7 +30,7 @@ public class Main {
     } else {
       System.out.println(new File(".").getAbsolutePath());
       System.out.print("Enter path input file>");
-      inputPath=new Scanner(System.in).nextLine();
+      inputPath = new Scanner(System.in).nextLine();
     }
     LinkedList<LambdaMatrix> lmSet;
 
@@ -46,7 +46,7 @@ public class Main {
       return;
     }
 
-    ConcurrentLinkedQueue<Set<GridPoint>> realisations = new ConcurrentLinkedQueue<>();
+    ConcurrentHashMap<LambdaMatrix, Set<GridPoint>> realisations = new ConcurrentHashMap<>();
     int numThreads = NUM_THREADS;
     if (lmSet.size() < numThreads)
       numThreads = lmSet.size();
@@ -81,10 +81,17 @@ public class Main {
       }
     }
 
-    for (Set<GridPoint> realisation : realisations) {
-      for (GridPoint p : realisation) {
-        System.out.println(p.toString());
+    for (LambdaMatrix m : realisations.keySet()) {
+      System.out.println(m.toString() + ": ");
+      if (realisations.get(m).size() == 0)
+        System.out.println("INVALID!");
+      else {
+        for (GridPoint p : realisations.get(m)) {
+          System.out.println(p.toString());
+        }
+
       }
+      System.out.println("-------------");
     }
 
   }

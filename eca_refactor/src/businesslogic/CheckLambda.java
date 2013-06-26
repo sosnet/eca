@@ -81,7 +81,7 @@ public class CheckLambda {
       calcCollCandidates(i, cc);
     }
     Set<Set<Integer>> coll = calculateColl(cc);
-    System.out.println(coll);
+   // System.out.println(coll);
 
     Set<String> orientations = new HashSet<>();
     Set<Set<Integer>> triples = new HashSet<>();
@@ -106,7 +106,7 @@ public class CheckLambda {
       // triples.add(s);
       // }
     }
-    System.out.println(triples);
+   // System.out.println(triples);
 
     for (int outer = 0; outer < lm.getDimenstion(); ++outer) {
       for (int inner = outer; inner < lm.getDimenstion(); ++inner) {
@@ -165,14 +165,14 @@ public class CheckLambda {
       ++i;
     }
     Query lambda = new Query(qBuf.toString());
-    System.out.println("Querying: \n" + qBuf.toString());
+   // System.out.println("Querying: \n" + qBuf.toString());
     // lambda.query();
 
     lambda.goal();
     Hashtable solution = lambda.oneSolution();
 
     if (solution != null) {
-      System.out.println("REALIZATION:");
+      //System.out.println("REALIZATION:");
       Set<GridPoint> gridpoints = new HashSet<>();
       for (Object o : solution.keySet()) {
         String pointstring = solution.get(o).toString();
@@ -180,7 +180,7 @@ public class CheckLambda {
         GridPoint p = new GridPoint(Integer.parseInt(st.nextToken()),
             Integer.parseInt(st.nextToken().trim()));
         p.setLabel(Integer.parseInt(o.toString().split("P")[1]));
-        System.out.println(o + ": " + p.getX() + ", " + p.getY());
+       // System.out.println(o + ": " + p.getX() + ", " + p.getY());
         gridpoints.add(p);
       }
       return gridpoints;
