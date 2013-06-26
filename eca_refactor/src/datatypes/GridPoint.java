@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class GridPoint extends java.awt.Point implements Comparable {
 
-  private int name;
+  private int label;
   private boolean highlighted;
 
   public GridPoint(){
@@ -13,7 +13,7 @@ public class GridPoint extends java.awt.Point implements Comparable {
   
   public GridPoint(int x, int y) {
     super(x, y);
-    this.name = 0;
+    this.label = 0;
     highlighted = false;
   }
 
@@ -41,16 +41,16 @@ public class GridPoint extends java.awt.Point implements Comparable {
     return x.compareTo(this.x);
   }
 
-  public int getName() {
-    return name;
+  public int getLabel() {
+    return label;
   }
 
-  public void setName(int name) {
-    this.name = name;
+  public void setLabel(int label) {
+    this.label = label;
   }
 
   public String toString() {
-    return String.format("%2d", name);
+    return String.format("%2d, x:%2d, y:%2d", label,x,y);
   }
 
   public void setHighlighted(boolean highlighted) {

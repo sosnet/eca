@@ -175,7 +175,7 @@ public class CheckLambda {
         StringTokenizer st = new StringTokenizer(pointstring, "p(, )");
         GridPoint p = new GridPoint(Integer.parseInt(st.nextToken()),
             Integer.parseInt(st.nextToken().trim()));
-        p.setName(Integer.parseInt(o.toString().split("P")[1]));
+        p.setLabel(Integer.parseInt(o.toString().split("P")[1]));
         System.out.println(o + ": " + p.getX() + ", " + p.getY());
         gridpoints.add(p);
       }
