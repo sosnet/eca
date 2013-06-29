@@ -1,0 +1,150 @@
+\pdfminorversion=4
+\documentclass{beamer}
+
+%\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{beamerthemedefault}
+\usepackage{bbding} %used for checkmarks in itemize
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
+
+\newcommand*\tick{\item[\Checkmark]}
+\newcommand*\fail{\item[\XSolidBrush]}
+\newcommand*\hand{\item[\HandRight]}
+
+\usetheme{Boadilla}
+
+\makeatother
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatletter
+\setbeamertemplate{navigation symbols}{}
+
+\title{Task 3 \\ \small{Gr 5: Mandl, Ankele, Jeran\\Gr 12: P\"ollitsch, Pr\"unster, Sommer, Vierthaler\\Gr 18: Fr"ohlich, Spitzer, Herrgesell}}
+\author{ECA group C (5, 12, 18)}
+\date{May 2013}
+
+
+\begin{document}
+%-----------------------------------------------------------------------
+\begin{frame}[plain]
+	\titlepage
+\end{frame}
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{summary of task03}
+\end{frame}
+% -----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+\section{Introduction}
+\begin{frame}
+\frametitle{Original plan}
+\begin{enumerate}
+\item GROUP 5: create at all  $\lambda$ - matrices for a specific $n,k$
+  \begin{itemize}
+  \item possible $\lambda$ - matrices
+  \item and impossible $\lambda$ - matrices
+  \item dead simple
+  \end{itemize}
+\item GROUP 12: check if given $\lambda$-matrices can be realized
+  \begin{itemize}
+  \item discard invalid $\lambda$-matrices
+  \item realise valid ones as pointset
+  \item must be fast
+  \end{itemize}
+\item GROUP 18: count empty polygons(3,4,5-gons) for given pointsets
+    \begin{itemize}
+    \item no duplicate requests $\rightarrow$ these pointsets are fingerprints
+    \end{itemize}
+\end{enumerate}
+\end{frame}
+% -----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{checking $\lambda$-matrices for validity}
+core idea: prolog program
+\begin{itemize}
+	\item should be easy to implement with simple rules
+	\item should be fast because of logic approach (backtracking \& forwardchecking)
+	\item non-deterministic
+\end{itemize}
+prolog rules derived from orientation (determinant-calculation):
+\begin{itemize}
+ \item \texttt{isLeft(p1,p2,px)}
+ \item \texttt{isColl(p1,p2,px)}
+\end{itemize}
+\end{frame}
+
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{checking $\lambda$-matrices for validity}
+core idea: prolog program
+\begin{itemize}
+	\item should be easy to implement with simple rules
+	\item should be fast because of logic approach (backtracking \& forwardchecking)
+	\item non-deterministic
+\end{itemize}
+prolog rules derived from orientation (determinant-calculation):
+\begin{itemize}
+ \item \texttt{isLeft(p1,p2,px)}
+ \item \texttt{isColl(p1,p2,px)}
+\end{itemize}
+\pause
+\begin{center}
+\huge{ $\rightarrow$ FAIL! $\leftarrow$}
+\end{center}
+
+\end{frame}
+
+
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{problems occured:}
+performance
+\begin{itemize}
+\item ok for 4 points ($<1$ secs)
+\item not feasible for $n > 4$
+\item example n = 5:
+\begin{itemize}
+  \item 50 clauses 3 points each $\binom{5}{2}$
+  \item every point-coordinate (2 coordinates each) can take values from 0..5 \newline $\rightarrow$ worstcase: $6^{10} \cdot 50 \cdot 12 (=36.279.705.600)$ operations
+\end{itemize}
+\item naive approach does not work
+\end{itemize}
+ways of improvement
+\begin{itemize}
+\item randomize choice of coordinates $\rightarrow$ no gain
+\item mathematical approach (screw prolog!) $\rightarrow$ no gain
+\end{itemize}
+\pause
+\begin{center}
+\huge{ $\rightarrow$ FAIL! $\leftarrow$}
+\end{center}
+\end{frame}
+% -----------------------------------------------------------------------
+
+% -----------------------------------------------------------------------
+\include{group12}
+%-----------------------------------------------------------------------
+\include{group18}
+%-----------------------------------------------------------------------
+\include{group5}
+\end{document}
