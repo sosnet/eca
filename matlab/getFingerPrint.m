@@ -35,10 +35,10 @@ for i=1:size(s,1)-1
         minGrid = l_Grid;
         minLambda = lambdaMatrix;
     else
-        diff = triu(lambdaMatrix, 1) - triu(minLambda, 1);
+        diff = lambdaMatrix - minLambda;
         found = 0;
-        for row=2:K-1
-            for col=row+1:K
+        for row=2:K
+            for col=1:K
                 if diff(row,col) > 0
                     found = 1;
                     break;
