@@ -27,11 +27,10 @@ s = [x(k), y(k)];
 for i=1:size(s,1)-1
     l_Grid = labelPoints(pointGrid, N, K, s, i);
     [lambdaMatrix, colinearPointsVector] = getLambdaMatrix(l_Grid);
-
-    if sum(colinearPointsVector) > 0
-        minLambda = 0;
-        return;
-    end
+%     if sum(colinearPointsVector) > 0
+%         minLambda = 0;
+%         return;
+%     end
     if minLambda == 0
         minGrid = l_Grid;
         minLambda = lambdaMatrix;
@@ -58,26 +57,28 @@ for i=1:size(s,1)-1
             minGrid = l_Grid;
         end
     end
+    
+    if debug == 1
+        l = l_Grid(l_Grid > 0);
+
+        labels = cellstr(num2str(l));
+
+        figure;
+        hold all;
+        plot(x(k), y(k), '-r', 'LineWidth', 2);
+        plot(x, y, 'b+', 'LineWidth', 3);
+        text(x, y, labels, 'VerticalAlignment','bottom', ...
+                           'HorizontalAlignment','right');
+        axis([1 N 1 N]);
+        grid on;
+        set(gca,'XTick',0:1:N);
+        set(gca,'YTick',0:1:N);
+
+        %f = dir('output/*.png');
+        %num = size(f,1)+1;
+        %print('-dpng', ['output/',num2str(num),'.png']);
+        %clf;
+    end
 end
 
-if debug == 1
-    l = minGrid(minGrid > 0);
-
-    labels = cellstr(num2str(l));
-
-    hold all;
-    plot(x(k), y(k), '-r', 'LineWidth', 2);
-    plot(x, y, 'b+', 'LineWidth', 3);
-    text(x, y, labels, 'VerticalAlignment','bottom', ...
-                       'HorizontalAlignment','right');
-    axis([1 N 1 N]);
-    grid on;
-    set(gca,'XTick',0:1:N);
-    set(gca,'YTick',0:1:N);
-
-    f = dir('output/*.png');
-    num = size(f,1)+1;
-    print('-dpng', ['output/',num2str(num),'.png']);
-    clf;
-end
 

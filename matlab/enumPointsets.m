@@ -1,6 +1,8 @@
 clear all;
 close all;
 
+set(0,'DefaultFigureWindowStyle','docked');
+
 N = 5;  %gridsize
 K = 5;  %#points
 
@@ -9,6 +11,8 @@ N2 = N*N;
 b = [zeros(1,N2-K), ones(1,K)];
 %allSets = unique(b(perms(1:N*N)),'rows');
 allSets = uniqueperms(b);
+%allSets = [0,1,1,1,0,1,0,0,0,1,1,0,0,0,1,0,0,1,1,1,0,0,0,0,0];
+%allSets = [1,1,1,1,0,1,1,1,1];
 %allSets = createGrid(N,K);
 %allSets = allSets(:)';
 numSets = size(allSets, 1);
