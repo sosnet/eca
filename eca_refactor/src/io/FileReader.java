@@ -22,7 +22,7 @@ public class FileReader {
     return instance;
   }
   
-  public Set<LambdaMatrix> read (String path) throws Exception {
+  public Set<LambdaMatrix> readLambdaMatrix (String path) throws Exception {
     Set<LambdaMatrix> buffer = new HashSet<>();
     
     java.io.FileReader fr = new java.io.FileReader(path);

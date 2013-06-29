@@ -36,7 +36,7 @@ public class Main {
 
     try {
       lmSet = new LinkedList<>();
-      lmSet.addAll(FileReader.getInstance().read(inputPath));
+      lmSet.addAll(FileReader.getInstance().readLambdaMatrix(inputPath));
       // for (LambdaMatrix m: lmSet) {
       // System.out.println(m.toString());
       // }

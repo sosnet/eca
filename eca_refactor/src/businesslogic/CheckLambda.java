@@ -22,11 +22,7 @@ public class CheckLambda {
     this.lm = lm;
     
   }
-  
-//  public Set<GridPoint> realize() {
-//    return null;
-//  }
-  
+    
   private void calcCollCandidates(int p, Map<Integer, Set<Integer>> points) {
     Set<Integer> set = new HashSet<>();
     for (int i = 0; i < lm.getDimenstion(); ++i) {
