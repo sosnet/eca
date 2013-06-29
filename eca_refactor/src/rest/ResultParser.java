@@ -7,6 +7,7 @@ public abstract class ResultParser {
 
   public static PointProps parse(String props)
       throws InvalidPointSetException {
+  //  System.out.println(props);
     if (!props.contains("_"))
       throw new InvalidPointSetException("Invalid Point Set!");
     String[] result = props.split("_");

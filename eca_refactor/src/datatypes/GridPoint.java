@@ -7,13 +7,19 @@ public class GridPoint extends java.awt.Point implements Comparable {
   private int label;
   private boolean highlighted;
 
-  public GridPoint(){
-	  
+  public GridPoint() {
+
   }
-  
+
   public GridPoint(int x, int y) {
     super(x, y);
     this.label = 0;
+    highlighted = false;
+  }
+
+  public GridPoint(int label, int x, int y) {
+    super(x, y);
+    this.label = label;
     highlighted = false;
   }
 
@@ -50,7 +56,7 @@ public class GridPoint extends java.awt.Point implements Comparable {
   }
 
   public String toString() {
-    return String.format("%2d, x:%2d, y:%2d", label,x,y);
+    return String.format("%2d:\t(%2d,%2d )", label, x, y);
   }
 
   public void setHighlighted(boolean highlighted) {

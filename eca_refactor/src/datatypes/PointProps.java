@@ -80,4 +80,34 @@ public class PointProps {
     return pentagonsNCC;
   }
 
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("Class: ").append(clazz).append("\n\n");
+
+    buf.append("\t").append("Empty triangles: ").append(triangles).append("\n");
+    buf.append("\t\t").append("Empty convex / not collinear triangles:     ")
+        .append(trianglesCNC).append("\n\n");
+
+    buf.append("\t").append("Empty tetragons: ").append(tetragons).append("\n");
+    buf.append("\t\t").append("Empty convex / not collinear tetragons:     ")
+        .append(tetragonsCNC).append("\n");
+    buf.append("\t\t").append("Empty convex / collinear tetragons:         ")
+        .append(tetragonsCC).append("\n");
+    buf.append("\t\t").append("Empty not convex / not collinear tetragons: ")
+        .append(tetragonsNCNC).append("\n");
+    buf.append("\t\t").append("Empty not convex / collinear tetragons:     ")
+        .append(tetragonsNCC).append("\n\n");
+
+    buf.append("\t").append("Empty pentagons: ").append(pentagons).append("\n");
+    buf.append("\t\t").append("Empty convex / not collinear pentagons:     ")
+        .append(pentagonsCNC).append("\n");
+    buf.append("\t\t").append("Empty convex / collinear pentagons:         ")
+        .append(pentagonsCC).append("\n");
+    buf.append("\t\t").append("Empty not convex / not collinear pentagons: ")
+        .append(pentagonsNCNC).append("\n");
+    buf.append("\t\t").append("Empty not convex / collinear pentagons:     ")
+        .append(pentagonsNCC);
+    return buf.toString();
+
+  }
 }

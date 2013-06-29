@@ -27,11 +27,24 @@ public class PointSet {
   }
 
   public String stringify() {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     for (GridPoint p : points) {
       buf.append(p.x).append("_").append(p.y).append("_");
     }
     return buf.substring(0, buf.length() - 1);
   }
 
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("Points:");
+    for (GridPoint p : points) {
+      buf.append("\n").append(p.toString());
+    }
+    if (matrix != null)
+      buf.append("\nLambda Matrix:\n").append(matrix.toString());
+    if (props != null)
+      buf.append("\nPoint Properties:\n").append(props.toString());
+    return buf.toString();
+
+  }
 }

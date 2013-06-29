@@ -24,14 +24,14 @@ public class RestClient {
 
   private RestClient() {
     this.res = Client.create().resource(RestConf.URL_SERVICE);
+    
   }
 
   @SuppressWarnings("unchecked")
   public String queryPoints(PointSet set) {
     @SuppressWarnings("rawtypes")
     MultivaluedMap queryParams = new MultivaluedMapImpl();
-    queryParams.add(RestConf.KEY_QUERY, "val1");
-    queryParams.add("param2", set.stringify());
+    queryParams.add(RestConf.KEY_QUERY, set.stringify());
     return res.queryParams(queryParams).get(String.class);
   }
 
