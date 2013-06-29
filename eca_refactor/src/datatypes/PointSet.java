@@ -5,9 +5,16 @@ public class PointSet {
   PointProps props;
   LambdaMatrix matrix;
 
+  boolean valid;
+
+  public boolean isValid() {
+    return valid;
+  }
+
   public PointSet(GridPoint[] points, LambdaMatrix matrix) {
     this.points = points;
     this.matrix = matrix;
+    valid = false;
   }
 
   public GridPoint[] getPoints() {
@@ -24,6 +31,7 @@ public class PointSet {
 
   public void setPointProps(PointProps props) {
     this.props = props;
+    valid = true;
   }
 
   public String stringify() {
@@ -44,6 +52,8 @@ public class PointSet {
       buf.append("\nLambda Matrix:\n").append(matrix.toString());
     if (props != null)
       buf.append("\nPoint Properties:\n").append(props.toString());
+    else
+      buf.append("This Point Set is invalid!\n");
     return buf.toString();
 
   }

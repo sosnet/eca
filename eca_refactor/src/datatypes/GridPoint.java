@@ -1,6 +1,5 @@
 package datatypes;
 
-import java.util.Random;
 
 public class GridPoint extends java.awt.Point implements Comparable {
 
