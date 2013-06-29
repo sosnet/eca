@@ -34,7 +34,7 @@ for i=1:numSets
     if size(lambdas,2) == 0
         [y,x] = find(ps);
         coords = reshape([x,y]', K*2, 1)';
-        dlmwrite(filename, coords, '-append', 'newline', 'pc');
+        dlmwrite(filename, coords, 'newline', 'pc');
         lambdas{1} = fp;
     else
         for j=1:size(lambdas,2)
