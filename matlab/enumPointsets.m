@@ -1,8 +1,8 @@
 clear all;
 close all;
 
-N = 3;  %gridsize
-K = 3;  %#points
+N = 5;  %gridsize
+K = 5;  %#points
 
 N2 = N*N;
 
@@ -15,6 +15,8 @@ numSets = size(allSets, 1);
 lambdas = cell(0);
 validSets = 0;
 
+filename = ['output/ps_',num2str(N),'_',num2str(K),'.txt'];
+
 for i=1:numSets
     if mod(i, 1000) == 0
         fprintf('Pointset: %d\n', i);
@@ -26,6 +28,9 @@ for i=1:numSets
     end
     found = 0;
     if size(lambdas,2) == 0
+        [y,x] = find(ps);
+        coords = reshape([x,y]', K*2, 1)';
+        dlmwrite(filename, coords, '-append', 'newline', 'pc');
         lambdas{1} = fp;
     else
         for j=1:size(lambdas,2)
@@ -35,6 +40,9 @@ for i=1:numSets
             end
         end
         if found == 0
+            [y,x] = find(ps);
+            coords = reshape([x,y]', K*2, 1)';
+            dlmwrite(filename, coords, '-append', 'newline', 'pc');
             lambdas{j+1} = fp;
         end
     end
