@@ -53,37 +53,124 @@
 %-----------------------------------------------------------------------
 \section{Introduction}
 \begin{frame}
-\frametitle{Introduction}
+\frametitle{Initial plan}
 \begin{enumerate}
-\item GROUP 5: create at all possible $\lambda$ - matrices for a specific n and more
+\item GROUP 5: create at all  $\lambda$ - matrices for a specific $n,k$
   \begin{itemize}
-  \item look for clever ways
-  \item duplicates are allowed
+  \item possible $\lambda$ - matrices
+  \item and impossible $\lambda$ - matrices
+  \item dead simple
   \end{itemize}
 \item GROUP 12: check if given $\lambda$-matrices can be realized
   \begin{itemize}
-  \item throw away invalid $\lambda$-matrices
+  \item discard invalid $\lambda$-matrices
+  \item realise valid ones as pointset
   \item must be fast
   \end{itemize}
-\item GROUP 18: count empty triangles with given $\lambda-matrices$
+\item GROUP 18: count empty polygons(3,4,5-gons) for given pointsets
     \begin{itemize}
-    \item in theory these matrices have already been checked
+    \item no duplicate requests $\rightarrow$ these pointsets are fingerprints
     \end{itemize}
 \end{enumerate}
 \end{frame}
 % -----------------------------------------------------------------------
 
+%-----------------------------------------------------------------------
+%\begin{frame}
+%\frametitle{checking $\lambda$-matrices for validity}
+%core idea: prolog program
+%\begin{itemize}
+%	\item should be easy to implement with simple rules
+%	\item should be fast because of logic approach (backtracking \& forwardchecking)
+%	\item non-deterministic
+%\end{itemize}
+%prolog rules derived from orientation (determinant-calculation):
+%\begin{itemize}
+% \item \texttt{isLeft(p1,p2,px)}
+% \item \texttt{isColl(p1,p2,px)}
+%\end{itemize}
+%\end{frame}
 
 
 %-----------------------------------------------------------------------
-\section{first approach}
 \begin{frame}
-\frametitle{first approach}
-Our first approach consisted 
+\frametitle{checking $\lambda$-matrices for validity}
+core idea: prolog program
+\begin{itemize}
+	\item should be easy to implement with simple rules
+	\item should be fast because of logic approach (backtracking \& forwardchecking)
+	\item non-deterministic
+\end{itemize}
+prolog rules derived from orientation (determinant-calculation):
+\begin{itemize}
+ \item \texttt{isLeft(p1,p2,px)}
+ \item \texttt{isColl(p1,p2,px)}
+\end{itemize}
+\pause
+\begin{center}
+\huge{ $\rightarrow$ FAIL! $\leftarrow$}
+\end{center}
+
+\end{frame}
+
+
+
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{problems occured:}
+performance
+\begin{itemize}
+\item ok for 4 points ($<1$ secs)
+\item not feasible for $n > 4$
+\item example n = 5:
+\begin{itemize}
+  \item 50 clauses 3 points each $\binom{5}{2}$
+  \item every point-coordinate (2 coordinates each) can take values from 0..5 \newline $\rightarrow$ worstcase: $6^{10} \cdot 50 \cdot 12 (=36.279.705.600)$ operations
+\end{itemize}
+\item naive approach does not work
+\end{itemize}
+ways of improvement
+\begin{itemize}
+\item randomize choice of coordinates $\rightarrow$ no gain
+\item mathematical approach (screw prolog!) $\rightarrow$ no gain
+\end{itemize}
+\pause
+\begin{center}
+\huge{ $\rightarrow$ FAIL! $\leftarrow$}
+\end{center}
 \end{frame}
 % -----------------------------------------------------------------------
 
+%-----------------------------------------------------------------------
+\begin{frame}
+\frametitle{no problem because ...}
+group 6 can generate all possible pointsets and check for duplicates\\
+$\rightarrow$ new plan
+\end{frame}
 % -----------------------------------------------------------------------
+
+%-----------------------------------------------------------------------
+\section{new plan}
+\begin{frame}
+\frametitle{New plan}
+\begin{enumerate}
+\item GROUP 5: create all pointsets for a specific $n,k$
+  \begin{itemize}
+  \item only pointsets with valid $\lambda$ - matrices
+  \end{itemize}
+\item GROUP 12: parse output from group 5 and transform to correct input for group 18
+\item GROUP 18: count empty polygons(3,4,5-gons) for given pointsets
+\begin{center}
+\vspace{2em}
+\includegraphics[width=100px]{bender-applause}
+\end{center}
+
+
+
+\end{enumerate}
+\end{frame}
+% -----------------------------------------------------------------------
+
 \include{group12}
 %-----------------------------------------------------------------------
 \include{group18}
