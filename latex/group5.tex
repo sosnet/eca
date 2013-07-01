@@ -4,6 +4,49 @@
 \subsection{Group 5: counting empty triangles}
 \begin{frame}
 \frametitle{create $\lambda$ - matrices}
-GROUP 5 should tex here
+K = Number of points \\
+N = Gridsize \\
+Procedure to create all $\lambda$ - matrices for a given point set \\
+\begin{itemize}
+  \item Create all possible pointsets for a fix K and N
+  \item For each pointset calculate minimal $\lambda$ matrix (Task 2)
+  \item Save all unique minimal $\lambda$ matrices and one pointset
+  \item Store the resulting unique pointsets in file for further processing
+\end{itemize}
+\end{frame}
+% -----------------------------------------------------------------------
+
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{Fingerprint(min. $\lambda$ matrix)}
+Changes to cope with collinear points
+\begin{itemize}
+  \item Get convex hull for given pointset
+  \item For each point on the hull
+  \begin{itemize}
+    \item Calculate difference vector to all other points
+    \item Get angle between these vectors and first difference vector on convex hull
+    \item Sort points in ascending order according to the distance
+    \item Sort points again according to the angle (clockwise)
+    \item Calculate $\lambda$ matrix for this labeling
+  \end{itemize}
+\end{itemize}
+\end{frame}
+% -----------------------------------------------------------------------
+
+% -----------------------------------------------------------------------
+\begin{frame}
+\frametitle{Filter collinear and non-collinear point sets}
+Collinearity can be checked during calculation of $\lambda$ matrix. \\
+For each point pair:
+\begin{itemize}
+  \item Create triangle with every other point
+  \item Check if point is left or right using the determinant
+  \item If determinant is zero the three points lie on the same line
+  \item Count points on left and right side
+  \item Set entries in the $\lambda$ matrix
+\end{itemize}
+Return $\lambda$ matrix and number of collinear points. \\
+Take point sets with/without collinear points or both.
 \end{frame}
 % -----------------------------------------------------------------------
