@@ -14,24 +14,28 @@
 \newcommand*\fail{\item[\XSolidBrush]}
 \newcommand*\hand{\item[\HandRight]}
 
-\usetheme{Boadilla}
+%\usetheme{Boadilla}
 
-\makeatother
-\setbeamertemplate{footline}
-{
-  \leavevmode%
-  \hbox{%
-  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
-    \usebeamerfont{author in head/foot}\insertshortauthor
-  \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
-    \usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
-    \insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
-  \end{beamercolorbox}}%
-  \vskip0pt%
-}
-\makeatletter
+%\makeatother
+%\usepackage{lmodern}
+%\setbeamertemplate{footline}
+%{
+%  \leavevmode%
+%  \hbox{%
+%  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+%    \usebeamerfont{author in head/foot}\insertshortauthor
+%  \end{beamercolorbox}%
+%  \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+%    \usebeamerfont{title in head/foot}\insertshorttitle\hspace*{3em}
+%    \insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+%  \end{beamercolorbox}}%
+%  \vskip0pt%
+%}
+%\makeatletter
+%\setbeamertemplate{navigation symbols}{}
+
 \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number] 
 
 \title{Task 3 \\ \small{Gr 5: Mandl, Ankele, Jeran\\Gr 12: P\"ollitsch, Pr\"unster, Sommer, Vierthaler\\Gr 18: Fr\"ohlich, Spitzer, Herrgesell}}
 \author{ECA group C (5, 12, 18)}
@@ -43,12 +47,6 @@
 \begin{frame}[plain]
 	\titlepage
 \end{frame}
-
-%-----------------------------------------------------------------------
-\begin{frame}
-\frametitle{summary of task03}
-\end{frame}
-% -----------------------------------------------------------------------
 
 %-----------------------------------------------------------------------
 \section{Introduction}
@@ -166,7 +164,7 @@ $\rightarrow$ new plan
 
 \include{group5}
 %-----------------------------------------------------------------------
-\include{group12}
+%\include{group12}
 %-----------------------------------------------------------------------
 \include{group18}
 
