@@ -31,8 +31,8 @@ public abstract class ResultParser {
     String[] result = pointset.split(",");
     GridPoint[] points = new GridPoint[result.length / 2];
     for (int i = 0; i < result.length; i += 2) {
-      points[i / 2] = new GridPoint(i / 2, Integer.parseInt(result[i]),
-          Integer.parseInt(result[i + 1]));
+      points[i / 2] = new GridPoint(i / 2, Integer.parseInt(result[i])-1,
+          Integer.parseInt(result[i + 1])-1);
     }
     return new PointSet(points, null);
 

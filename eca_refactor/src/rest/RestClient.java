@@ -32,6 +32,7 @@ public class RestClient {
     @SuppressWarnings("rawtypes")
     MultivaluedMap queryParams = new MultivaluedMapImpl();
     queryParams.add(RestConf.KEY_QUERY, set.stringify());
+    System.out.println(set.stringify());
     return res.queryParams(queryParams).get(String.class);
   }
 
