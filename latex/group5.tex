@@ -19,17 +19,15 @@ Procedure to create all $\lambda$ - matrices for a given point set \\
 % -----------------------------------------------------------------------
 \begin{frame}
 \frametitle{Fingerprint(min. $\lambda$ matrix)}
-Changes to cope with collinear points
+Changes to cope with collinear points \\
+Get convex hull for given pointset \\
+For each point on the hull
 \begin{itemize}
-  \item Get convex hull for given pointset
-  \item For each point on the hull
-  \begin{itemize}
-    \item Calculate difference vector to all other points
-    \item Get angle between these vectors and first difference vector on convex hull
-    \item Sort points in ascending order according to the distance
-    \item Sort points again according to the angle (clockwise)
-    \item Calculate $\lambda$ matrix for this labeling
-  \end{itemize}
+  \item Calculate difference vector to all other points
+  \item Get angle between these vectors and first difference vector on convex hull
+  \item Sort points in ascending order according to the distance
+  \item Sort points again according to the angle (clockwise)
+  \item Calculate $\lambda$ matrix for this labeling
 \end{itemize}
 \end{frame}
 % -----------------------------------------------------------------------
